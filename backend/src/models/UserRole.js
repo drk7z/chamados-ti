@@ -30,7 +30,8 @@ const UserRole = sequelize.define('UserRole', {
   }
 }, {
   tableName: 'user_roles',
-  timestamps: true
+  timestamps: true,
+  paranoid: false
 });
 
 // Tabela intermediária Role <-> Permission (muitos para muitos)
@@ -58,7 +59,8 @@ const RolePermission = sequelize.define('RolePermission', {
   }
 }, {
   tableName: 'role_permissions',
-  timestamps: false
+  timestamps: false,
+  paranoid: false
 });
 
 module.exports = { UserRole, RolePermission };

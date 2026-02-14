@@ -64,10 +64,12 @@ const startServer = async () => {
     await sequelize.authenticate();
     logger.info('📦 Conexão com banco de dados estabelecida');
 
-    // Sincronizar modelos (apenas em desenvolvimento)
-    if (process.env.NODE_ENV === 'development') {
+    // Sincronizar modelos (opcional em desenvolvimento)
+    if (process.env.NODE_ENV === 'development' && process.env.DB_SYNC === 'true') {
       await sequelize.sync({ alter: false });
       logger.info('🔄 Modelos sincronizados');
+    } else {
+      logger.info('⏭️ Sincronização de modelos desabilitada (DB_SYNC != true)');
     }
 
     // Iniciar servidor

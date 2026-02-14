@@ -19,7 +19,7 @@ const authenticate = async (req, res, next) => {
         include: [{
           model: Permission,
           as: 'permissions',
-          through: { attributes: [] }
+          through: { attributes: [], paranoid: false }
         }]
       }]
     });

@@ -19,7 +19,7 @@ class AuthController {
         include: [{
           model: Role,
           as: 'roles',
-          through: { attributes: [] }
+          through: { attributes: [], paranoid: false }
         }]
       });
 
@@ -98,7 +98,7 @@ class AuthController {
         include: [{
           model: Role,
           as: 'roles',
-          through: { attributes: [] }
+          through: { attributes: [], paranoid: false }
         }]
       });
 

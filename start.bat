@@ -289,6 +289,13 @@ for /f "delims=" %%D in ('dir /b /ad-h /o-n "C:\laragon\bin\postgresql" 2^>nul')
     )
 )
 
+for /f "delims=" %%D in ('dir /b /ad-h /o-n "C:\Program Files\PostgreSQL" 2^>nul') do (
+    if exist "C:\Program Files\PostgreSQL\%%D\bin\psql.exe" (
+        set "PSQL_CMD=C:\Program Files\PostgreSQL\%%D\bin\psql.exe"
+        exit /b 0
+    )
+)
+
 exit /b 0
 
 REM ═══════════════════════════════════════════════════════════
