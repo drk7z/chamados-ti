@@ -3,10 +3,12 @@
 ## ⚡ Quick Start (5 minutos)
 
 ### 1. Pré-requisitos
+
 - Node.js 18+
 - PostgreSQL 14+
 
 ### 2. Clone e Instale
+
 ```bash
 # Clone o repositório
 git clone https://github.com/seu-usuario/chamados-ti.git
@@ -22,6 +24,7 @@ npm install
 ```
 
 ### 3. Configure o Banco
+
 ```sql
 -- No PostgreSQL
 CREATE DATABASE chamados_ti;
@@ -33,6 +36,7 @@ CREATE DATABASE chamados_ti;
 ### 4. Configure Variáveis de Ambiente
 
 **Backend (.env):**
+
 ```env
 DB_NAME=chamados_ti
 DB_USER=postgres
@@ -41,6 +45,7 @@ JWT_SECRET=sua-chave-secreta-minimo-32-caracteres
 ```
 
 **Frontend (.env):**
+
 ```env
 REACT_APP_API_URL=http://localhost:3001/api
 ```
@@ -48,12 +53,14 @@ REACT_APP_API_URL=http://localhost:3001/api
 ### 5. Inicie os Servidores
 
 **Terminal 1 - Backend:**
+
 ```bash
 cd backend
 npm run dev
 ```
 
 **Terminal 2 - Frontend:**
+
 ```bash
 cd frontend
 npm start
@@ -61,20 +68,23 @@ npm start
 
 ### 6. Crie o Usuário Admin
 
-```sql
--- Senha: admin
-INSERT INTO users (id, nome, email, senha, ativo) 
-VALUES (
-  gen_random_uuid(), 
-  'Administrador', 
-   'admin',
-   '$2a$10$E3C3jAplC6Tn9yNNu05ciuYxaUEQW5fjveKMtvLAzuM2QW2g9jQKu',
-  true
-);
+```bash
+cd backend
+npm run migrate
+npm run seed
 ```
 
+Isso cria/atualiza:
+
+- entidade padrão (multi-tenant)
+- perfis base (Administrador, Gestor, Técnico, Solicitante, Auditor)
+- usuário admin padrão
+- vínculo do admin com perfil Administrador
+- configurações iniciais por escopo
+
 ### 7. Faça Login
-- URL: http://localhost:3000/login
+
+- URL: <http://localhost:3000/login>
 - Usuário: `admin`
 - Senha: `admin`
 
@@ -182,6 +192,7 @@ chamados-ti/
 ## 🎯 Funcionalidades Principais
 
 ### 🎫 Módulo de Chamados
+
 - ✅ Abertura de chamados
 - ✅ Gestão de filas
 - ✅ Atribuição automática
@@ -191,6 +202,7 @@ chamados-ti/
 - ✅ Relatórios
 
 ### 📦 Módulo de Inventário
+
 - ✅ Cadastro de ativos
 - ✅ Controle de localização
 - ✅ Histórico de movimentações
@@ -199,12 +211,14 @@ chamados-ti/
 - ✅ Softwares e licenças
 
 ### 👥 Módulo de Clientes
+
 - ✅ Multiempresa
 - ✅ Unidades
 - ✅ Departamentos
 - ✅ Centros de custo
 
 ### ⚙ Módulo de Administração
+
 - ✅ Usuários e perfis
 - ✅ Permissões granulares
 - ✅ Configurações do sistema
@@ -215,19 +229,20 @@ chamados-ti/
 
 ## 🔐 Perfis de Usuário
 
-| Perfil | Nível | Permissões |
-|--------|-------|-----------|
-| Administrador | 1 | Acesso total |
-| Gestor de Área | 2 | Gerencia sua área |
-| Técnico | 3 | Atende chamados |
-| Solicitante | 4 | Abre chamados |
-| Auditor | 5 | Visualiza relatórios |
+| Perfil         | Nível | Permissões           |
+| -------------- | ----- | -------------------- |
+| Administrador  | 1     | Acesso total         |
+| Gestor de Área | 2     | Gerencia sua área    |
+| Técnico        | 3     | Atende chamados      |
+| Solicitante    | 4     | Abre chamados        |
+| Auditor        | 5     | Visualiza relatórios |
 
 ---
 
 ## 📊 Tecnologias
 
 **Backend:**
+
 - Node.js 18+
 - Express 4
 - PostgreSQL 14+
@@ -236,6 +251,7 @@ chamados-ti/
 - Winston (logs)
 
 **Frontend:**
+
 - React 18
 - Material-UI (MUI)
 - React Router
@@ -248,6 +264,7 @@ chamados-ti/
 ## 🐛 Solução de Problemas
 
 ### Porta já em uso
+
 ```bash
 # Windows
 netstat -ano | findstr :3001
@@ -258,6 +275,7 @@ lsof -ti:3001 | xargs kill -9
 ```
 
 ### Erro de conexão com banco
+
 ```bash
 # Verificar se PostgreSQL está rodando
 # Windows
@@ -268,6 +286,7 @@ sudo systemctl status postgresql
 ```
 
 ### Erro MODULE_NOT_FOUND
+
 ```bash
 rm -rf node_modules package-lock.json
 npm install
@@ -277,7 +296,7 @@ npm install
 
 ## 📞 Suporte
 
-- 📧 **Email:** suporte@chamados-ti.com
+- 📧 **Email:** <suporte@chamados-ti.com>
 - 💬 **GitHub Issues:** [Link](https://github.com/seu-usuario/chamados-ti/issues)
 - 📚 **Documentação completa:** [docs/](./docs/)
 

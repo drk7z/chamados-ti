@@ -122,39 +122,20 @@ Deve abrir automaticamente em: http://localhost:3000
 
 ## Passo 5: Criar Usuário Administrador
 
-Abra o PostgreSQL e execute:
+Execute os scripts automáticos:
 
-```sql
--- Conectar ao banco
-\c chamados_ti
-
--- Inserir usuário admin (senha: admin)
-INSERT INTO users (id, nome, email, senha, ativo) 
-VALUES (
-  gen_random_uuid(), 
-  'Administrador', 
-  'admin',
-  '$2a$10$E3C3jAplC6Tn9yNNu05ciuYxaUEQW5fjveKMtvLAzuM2QW2g9jQKu',
-  true
-);
-
--- Pegar o ID do usuário
-SELECT id, nome, email FROM users WHERE email = 'admin';
-
--- Copie o ID retornado e use nos próximos comandos
-
--- Pegar ID do perfil Admin
-SELECT id FROM roles WHERE nome = 'Administrador';
-
--- Associar usuário ao perfil (substitua os UUIDs)
-INSERT INTO user_roles (id, user_id, role_id, ativo)
-VALUES (
-  gen_random_uuid(),
-  'UUID_DO_USUARIO_AQUI',
-  'UUID_DO_ROLE_ADMIN_AQUI',
-  true
-);
+```bash
+cd backend
+npm run migrate
+npm run seed
 ```
+
+Os scripts acima preparam automaticamente:
+- colunas e FKs multi-tenant essenciais
+- entidade padrão
+- perfis base do sistema
+- usuário admin e vínculo com perfil Administrador
+- configurações iniciais por tenant/global
 
 ## Passo 6: Fazer Login
 

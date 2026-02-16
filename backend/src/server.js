@@ -11,10 +11,53 @@ const errorHandler = require('./middlewares/errorHandler');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
+const envOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((value) => value.trim())
+  .filter(Boolean);
+
+const defaultOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+];
+
+const allowedOrigins = new Set([...defaultOrigins, ...envOrigins]);
+const lanOriginRegex = /^https?:\/\/(192\.168\.|10\.|172\.(1[6-9]|2\d|3[0-1])\.)[^/]*:3000$/i;
+
 // Middlewares de Segurança
 app.use(helmet());
+if (process.env.NODE_ENV === 'production' && process.env.ENFORCE_HTTPS === 'true') {
+  app.use((req, res, next) => {
+    const forwardedProto = req.headers['x-forwarded-proto'];
+    const isHttps = req.secure || forwardedProto === 'https';
+
+    if (isHttps) {
+      next();
+      return;
+    }
+
+    res.redirect(301, `https://${req.headers.host}${req.originalUrl}`);
+  });
+}
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    if (allowedOrigins.has(origin) || lanOriginRegex.test(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error(`Origem não permitida por CORS: ${origin}`));
+  },
   credentials: true
 }));
 

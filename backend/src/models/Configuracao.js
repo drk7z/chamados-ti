@@ -72,7 +72,8 @@ const ConfiguracaoSistema = sequelize.define('ConfiguracaoSistema', {
     defaultValue: true
   }
 }, {
-  tableName: 'configuracoes_sistema'
+  tableName: 'configuracoes_sistema',
+  paranoid: false
 });
 
 // EmailSmtp - Configurações de SMTP

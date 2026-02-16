@@ -2,7 +2,7 @@
 
 Sistema completo de **IT Service Management (ITSM)** e **IT Asset Management (ITAM)** inspirado em GLPI, desenvolvido com tecnologias modernas para gestão eficiente de chamados técnicos, inventário de ativos e base de conhecimento.
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.3.1-blue)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-green)
 ![PostgreSQL](https://img.shields.io/badge/postgresql-14%2B-blue)
 ![React](https://img.shields.io/badge/react-18.2-blue)
@@ -389,6 +389,10 @@ Veja a pasta `/docs` para documentação detalhada:
 - **[API.md](docs/API.md)** - Documentação completa da API REST
 - **[INSTALLATION.md](docs/INSTALLATION.md)** - Guia de instalação detalhado
 - **[database-diagram.md](docs/database-diagram.md)** - Diagrama ER do banco
+- **[ROADMAP-IMPLEMENTACAO.md](docs/ROADMAP-IMPLEMENTACAO.md)** - Plano de evolução por fases/sprints
+- **[VERSIONAMENTO.md](docs/VERSIONAMENTO.md)** - Política de versionamento, commits, PRs e releases
+- **[SPRINT-02-ENCERRAMENTO.md](docs/SPRINT-02-ENCERRAMENTO.md)** - Resumo técnico de fechamento da Sprint 2
+- **[BACKLOG-SPRINT-03.md](docs/BACKLOG-SPRINT-03.md)** - Backlog executável da Sprint 3
 
 ### Principais Endpoints
 

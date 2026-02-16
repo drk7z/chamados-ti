@@ -1,5 +1,77 @@
 # Changelog - Sistema de Chamados TI
 
+## [1.3.1] - Sprint 3 (SLA Regras + Métricas Filtradas)
+
+### Added (1.3.1)
+
+- Resolução condicional de SLA via `sla_regras` no fluxo de criação/atualização de chamados.
+- Filtros de métricas SLA por `data_inicio`, `data_fim`, `tecnico_id` e `area_id`.
+- Visões agregadas de métricas por técnico e por área no endpoint `/api/ocorrencias/metricas/sla`.
+
+### Changed (1.3.1)
+
+- Cálculo de prazo SLA passou a priorizar regra condicional e fallback para SLA padrão por tipo.
+
+### Fixed (1.3.1)
+
+- Ajuste de `SlaRegra` para `paranoid: false` (compatibilidade com tabela sem `deleted_at`).
+
+## [1.3.0] - Encerramento Sprint 2 e Início Sprint 3
+
+### Added (1.3.0)
+
+- Documento de encerramento da sprint em `docs/SPRINT-02-ENCERRAMENTO.md`.
+- Backlog executável da Sprint 3 em `docs/BACKLOG-SPRINT-03.md`.
+- Persistência de eventos de SLA em `sla_eventos` no fluxo de chamados.
+- Endpoint de timeline de SLA por chamado: `GET /api/ocorrencias/:id/sla-eventos`.
+- Seed com tipo de chamado padrão para abertura inicial.
+
+### Changed (1.3.0)
+
+- Roadmap atualizado com Sprint 2 concluída e Sprint 3 em andamento.
+- Seed local ampliado para base organizacional mínima e dados de chamados.
+
+### Fixed (1.3.0)
+
+- Ajuste de `ChamadoHistorico` para `paranoid: false` (compatibilidade com tabela sem `deleted_at`).
+
+## [1.2.1] - Sprint 2 (Core Organizacional + Auditoria)
+
+### Added (1.2.1)
+
+- CRUD mínimo de estrutura organizacional:
+  - unidades (`/api/clientes/:clienteId/unidades`)
+  - departamentos (`/api/clientes/unidades/:unidadeId/departamentos`)
+  - centros de custo (`/api/clientes/departamentos/:departamentoId/centros-custo`)
+- Auditoria padronizada via utilitário `backend/src/utils/audit.js`.
+- Documentação de smoke checks em `docs/SMOKE-CHECKS.md`.
+
+### Changed (1.2.1)
+
+- Listagem de clientes com busca e paginação opcional sem quebrar resposta legada.
+- Seed local agora inclui base organizacional mínima (cliente, unidade, departamento e centro de custo).
+
+### Fixed (1.2.1)
+
+- Reforço de escopo tenant em consultas encadeadas de estrutura organizacional.
+
+## [1.2.0] - Fechamento da Sprint 1 e Abertura da Sprint 2
+
+### Added (1.2.0)
+
+- Documentação de encerramento da sprint em `docs/SPRINT-01-ENCERRAMENTO.md`.
+- Backlog executável da próxima sprint em `docs/BACKLOG-SPRINT-02.md`.
+
+### Changed (1.2.0)
+
+- Roadmap atualizado com status de execução:
+  - Sprint 1 marcada como concluída.
+  - Sprint 2 marcada como em andamento.
+
+### Fixed (1.2.0)
+
+- Consolidação da trilha documental de governança para fechamento e transição entre sprints.
+
 ## [1.1.0] - Expansão do Sistema (Novas Funcionalidades)
 
 ### ✨ Novos Recursos

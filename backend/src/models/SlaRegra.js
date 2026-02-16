@@ -42,7 +42,8 @@ const SlaRegra = sequelize.define('SlaRegra', {
     defaultValue: true
   }
 }, {
-  tableName: 'sla_regras'
+  tableName: 'sla_regras',
+  paranoid: false
 });
 
 // SlaEvento - Eventos de SLA (violações, cumprimentos)

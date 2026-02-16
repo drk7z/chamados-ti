@@ -11,17 +11,18 @@ const apiExternaRoutes = require('../modules/api/api.routes');
 const conhecimentoRoutes = require('../modules/conhecimento/conhecimento.routes');
 
 const { authenticate } = require('../middlewares/auth');
+const { resolveTenant } = require('../middlewares/tenant');
 
 // Rotas públicas
 router.use('/auth', authRoutes);
 
 // Rotas protegidas
-router.use('/home', authenticate, homeRoutes);
-router.use('/ocorrencias', authenticate, ocorrenciasRoutes);
-router.use('/inventario', authenticate, inventarioRoutes);
-router.use('/clientes', authenticate, clientesRoutes);
-router.use('/admin', authenticate, adminRoutes);
-router.use('/conhecimento', authenticate, conhecimentoRoutes);
+router.use('/home', authenticate, resolveTenant, homeRoutes);
+router.use('/ocorrencias', authenticate, resolveTenant, ocorrenciasRoutes);
+router.use('/inventario', authenticate, resolveTenant, inventarioRoutes);
+router.use('/clientes', authenticate, resolveTenant, clientesRoutes);
+router.use('/admin', authenticate, resolveTenant, adminRoutes);
+router.use('/conhecimento', authenticate, resolveTenant, conhecimentoRoutes);
 
 // API Externa (autenticação por token)
 router.use('/external', apiExternaRoutes);

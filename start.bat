@@ -57,6 +57,7 @@ if not exist "backend\.env" (
 )
 
 call :prepare_database
+call :run_backend_bootstrap
 
 echo.
 echo ✅ Iniciando servidores...
@@ -65,6 +66,9 @@ echo    Backend:  http://localhost:3001
 echo    Frontend: http://localhost:3000
 echo    Login:    admin / admin
 echo.
+
+call :free_port 3001 Backend
+call :free_port 3000 Frontend
 
 start "Backend - Chamados TI" cmd /c "cd /d %~dp0backend && npm run dev"
 timeout /t 3 /nobreak > nul
@@ -154,6 +158,7 @@ if not exist "backend\.env" (
 echo ✅ Configuração OK
 
 call :prepare_database
+call :run_backend_bootstrap
 
 echo.
 echo [4/4] Iniciando servidores...
@@ -164,6 +169,9 @@ echo    Frontend: http://localhost:3000
 echo    Login:    admin / admin
 echo ═══════════════════════════════════════════════════════════
 echo.
+
+call :free_port 3001 Backend
+call :free_port 3000 Frontend
 
 start "Backend DEV" cmd /k "cd /d %~dp0backend && npm run dev"
 timeout /t 5 /nobreak > nul
@@ -189,12 +197,12 @@ echo ═════════════════════════
 echo.
 
 for /f "tokens=5" %%a in ('netstat -aon ^| find ":3001" ^| find "LISTENING"') do (
-    echo Parando Backend (PID: %%a)...
+    echo Parando Backend [PID: %%a]...
     taskkill /PID %%a /F > nul 2>&1
 )
 
 for /f "tokens=5" %%a in ('netstat -aon ^| find ":3000" ^| find "LISTENING"') do (
-    echo Parando Frontend (PID: %%a)...
+    echo Parando Frontend [PID: %%a]...
     taskkill /PID %%a /F > nul 2>&1
 )
 
@@ -204,6 +212,63 @@ echo.
 timeout /t 3 > nul
 cls
 goto :menu
+
+REM ═══════════════════════════════════════════════════════════
+REM  AUXILIAR: BOOTSTRAP BACKEND (MIGRATE + SEED)
+REM ═══════════════════════════════════════════════════════════
+:run_backend_bootstrap
+set "RUN_BOOTSTRAP=true"
+
+for /f "tokens=1,* delims==" %%A in ('findstr /R /C:"^START_RUN_BOOTSTRAP=" "backend\.env" 2^>nul') do set "RUN_BOOTSTRAP=%%B"
+
+if /i not "%RUN_BOOTSTRAP%"=="true" (
+    echo ℹ️  Bootstrap backend desabilitado (START_RUN_BOOTSTRAP=%RUN_BOOTSTRAP%)
+    exit /b 0
+)
+
+if not exist "backend\src\database\migrate.js" (
+    echo ℹ️  Script de migrate não encontrado, pulando bootstrap
+    exit /b 0
+)
+
+if not exist "backend\src\database\seed.js" (
+    echo ℹ️  Script de seed não encontrado, pulando bootstrap
+    exit /b 0
+)
+
+echo.
+echo 🔄 Executando bootstrap do backend (migrate + seed)...
+cd backend
+call npm run migrate > nul 2>&1
+if errorlevel 1 (
+    echo ⚠️  Falha no migrate automático. Continuando inicialização...
+) else (
+    echo ✅ Migrate concluído
+)
+
+call npm run seed > nul 2>&1
+if errorlevel 1 (
+    echo ⚠️  Falha no seed automático. Continuando inicialização...
+) else (
+    echo ✅ Seed concluído
+)
+cd ..
+
+exit /b 0
+
+REM ═══════════════════════════════════════════════════════════
+REM  AUXILIAR: LIBERAR PORTA
+REM ═══════════════════════════════════════════════════════════
+:free_port
+set "TARGET_PORT=%~1"
+set "TARGET_NAME=%~2"
+
+for /f "tokens=5" %%a in ('netstat -aon ^| find ":%TARGET_PORT%" ^| find "LISTENING"') do (
+    echo ⚠️  Porta %TARGET_PORT% em uso. Encerrando %TARGET_NAME% [PID: %%a]...
+    taskkill /PID %%a /F > nul 2>&1
+)
+
+exit /b 0
 
 REM ═══════════════════════════════════════════════════════════
 REM  AUXILIAR: PREPARAR BANCO (LARAGON/POSTGRES)
@@ -311,15 +376,15 @@ echo.
 
 echo [1] Procurando serviços PostgreSQL...
 echo.
-set FOUND=0
+set "FOUND=0"
 for /f "tokens=2" %%s in ('sc query type^= service state^= all ^| findstr /i "postgres"') do (
-    set FOUND=1
+    set "FOUND=1"
     echo ✅ Serviço: %%s
-    sc query %%s | findstr "STATE"
+    sc query "%%s" | findstr "STATE"
     echo.
 )
 
-if %FOUND%==0 (
+if "!FOUND!"=="0" (
     echo ❌ Nenhum serviço PostgreSQL encontrado!
     echo.
     echo 💡 Verifique se PostgreSQL está instalado:
@@ -346,28 +411,29 @@ if not defined PSQL_CMD (
     echo ❌ Não foi possível testar: psql indisponível
 ) else (
     "%PSQL_CMD%" -U postgres -d postgres -c "SELECT version();" 2>nul
-    if not errorlevel 1 (
-    echo.
-    echo ✅ Conexão OK!
-    "%PSQL_CMD%" -U postgres -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='chamados_ti';" > "%temp%\chamados_ti_diag_db_check.txt" 2>nul
-    set "DIAG_DB_EXISTS="
-    set /p DIAG_DB_EXISTS=<"%temp%\chamados_ti_diag_db_check.txt"
-    del "%temp%\chamados_ti_diag_db_check.txt" >nul 2>&1
-    if "%DIAG_DB_EXISTS%"=="1" (
-        echo ✅ Banco 'chamados_ti' existe
-    ) else (
-        echo ⚠️  Banco 'chamados_ti' não existe
+    if errorlevel 1 (
+        echo ❌ Falha na conexão
         echo.
-        echo Para criar:
-        echo    "%PSQL_CMD%" -U postgres -d postgres -c "CREATE DATABASE chamados_ti;"
-        echo    "%PSQL_CMD%" -U postgres -d chamados_ti -f database\schema.sql
-    )
+        echo 💡 Verifique:
+        echo    1. PostgreSQL/Laragon está rodando?
+        echo    2. Senha do usuário 'postgres' está correta?
     ) else (
-    echo ❌ Falha na conexão
-    echo.
-    echo 💡 Verifique:
-    echo    1. PostgreSQL/Laragon está rodando?
-    echo    2. Senha do usuário 'postgres' está correta?
+        echo.
+        echo ✅ Conexão OK!
+        "%PSQL_CMD%" -U postgres -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='chamados_ti';" > "%temp%\chamados_ti_diag_db_check.txt" 2>nul
+        set "DIAG_DB_EXISTS="
+        set /p DIAG_DB_EXISTS=<"%temp%\chamados_ti_diag_db_check.txt"
+        del "%temp%\chamados_ti_diag_db_check.txt" >nul 2>&1
+
+        if "!DIAG_DB_EXISTS!"=="1" (
+            echo ✅ Banco 'chamados_ti' existe
+        ) else (
+            echo ⚠️  Banco 'chamados_ti' não existe
+            echo.
+            echo Para criar:
+            echo    "%PSQL_CMD%" -U postgres -d postgres -c "CREATE DATABASE chamados_ti;"
+            echo    "%PSQL_CMD%" -U postgres -d chamados_ti -f database\schema.sql
+        )
     )
 )
 

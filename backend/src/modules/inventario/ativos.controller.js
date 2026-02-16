@@ -1,5 +1,6 @@
 const { Ativo, AtivoTipo, AtivoStatus, AtivoHistoricoLocalizacao } = require('../../models');
 const { Op } = require('sequelize');
+const { auditLog } = require('../../utils/audit');
 
 class AtivoController {
   async list(req, res, next) {
@@ -7,6 +8,7 @@ class AtivoController {
       const { page = 1, limit = 20, tipo, status, busca } = req.query;
       
       const where = {};
+      if (req.tenantId) where.entidade_id = req.tenantId;
       if (tipo) where.tipo_id = tipo;
       if (status) where.status_id = status;
       
@@ -42,7 +44,11 @@ class AtivoController {
 
   async getById(req, res, next) {
     try {
-      const ativo = await Ativo.findByPk(req.params.id, {
+      const where = { id: req.params.id };
+      if (req.tenantId) where.entidade_id = req.tenantId;
+
+      const ativo = await Ativo.findOne({
+        where,
         include: [
           { model: AtivoTipo, as: 'tipo' },
           { model: AtivoStatus, as: 'status' }
@@ -63,7 +69,17 @@ class AtivoController {
     try {
       const ativo = await Ativo.create({
         ...req.body,
+        entidade_id: req.tenantId || req.body.entidade_id || null,
         criado_por: req.user.id
+      });
+
+      await auditLog(req, {
+        modulo: 'inventario',
+        acao: 'create',
+        entidade: 'ativo',
+        entidadeId: ativo.id,
+        descricao: `Ativo criado: ${ativo.nome}`,
+        dadosDepois: ativo.toJSON()
       });
 
       res.status(201).json(ativo);
@@ -74,15 +90,29 @@ class AtivoController {
 
   async update(req, res, next) {
     try {
-      const ativo = await Ativo.findByPk(req.params.id);
+      const where = { id: req.params.id };
+      if (req.tenantId) where.entidade_id = req.tenantId;
+      const ativo = await Ativo.findOne({ where });
       
       if (!ativo) {
         return res.status(404).json({ error: 'Ativo não encontrado' });
       }
 
+      const dadosAntes = ativo.toJSON();
+
       await ativo.update({
         ...req.body,
         atualizado_por: req.user.id
+      });
+
+      await auditLog(req, {
+        modulo: 'inventario',
+        acao: 'update',
+        entidade: 'ativo',
+        entidadeId: ativo.id,
+        descricao: `Ativo atualizado: ${ativo.nome}`,
+        dadosAntes,
+        dadosDepois: ativo.toJSON()
       });
 
       res.json(ativo);
@@ -93,13 +123,28 @@ class AtivoController {
 
   async delete(req, res, next) {
     try {
-      const ativo = await Ativo.findByPk(req.params.id);
+      const where = { id: req.params.id };
+      if (req.tenantId) where.entidade_id = req.tenantId;
+      const ativo = await Ativo.findOne({ where });
       
       if (!ativo) {
         return res.status(404).json({ error: 'Ativo não encontrado' });
       }
 
+      const dadosAntes = ativo.toJSON();
+
       await ativo.destroy();
+
+      await auditLog(req, {
+        modulo: 'inventario',
+        acao: 'delete',
+        entidade: 'ativo',
+        entidadeId: ativo.id,
+        descricao: `Ativo removido: ${ativo.nome}`,
+        dadosAntes,
+        dadosDepois: { removido: true }
+      });
+
       res.json({ message: 'Ativo excluído com sucesso' });
     } catch (error) {
       next(error);
@@ -109,7 +154,13 @@ class AtivoController {
   async movimentar(req, res, next) {
     try {
       const { localizacao_nova_id, responsavel_novo_id, motivo } = req.body;
-      const ativo = await Ativo.findByPk(req.params.id);
+      const where = { id: req.params.id };
+      if (req.tenantId) where.entidade_id = req.tenantId;
+      const ativo = await Ativo.findOne({ where });
+
+      if (!ativo) {
+        return res.status(404).json({ error: 'Ativo não encontrado' });
+      }
 
       // Registrar histórico
       await AtivoHistoricoLocalizacao.create({
@@ -129,6 +180,20 @@ class AtivoController {
         responsavel_id: responsavel_novo_id
       });
 
+      await auditLog(req, {
+        modulo: 'inventario',
+        acao: 'move',
+        entidade: 'ativo',
+        entidadeId: ativo.id,
+        descricao: `Movimentação de ativo: ${ativo.nome}`,
+        dadosDepois: {
+          localizacao_anterior_id: ativo.localizacao_anterior_id,
+          localizacao_atual_id: ativo.localizacao_atual_id,
+          responsavel_id: ativo.responsavel_id,
+          motivo: motivo || null
+        }
+      });
+
       res.json(ativo);
     } catch (error) {
       next(error);
@@ -137,6 +202,14 @@ class AtivoController {
 
   async getHistorico(req, res, next) {
     try {
+      const where = { id: req.params.id };
+      if (req.tenantId) where.entidade_id = req.tenantId;
+      const ativo = await Ativo.findOne({ where });
+
+      if (!ativo) {
+        return res.status(404).json({ error: 'Ativo não encontrado' });
+      }
+
       const historico = await AtivoHistoricoLocalizacao.findAll({
         where: { ativo_id: req.params.id },
         order: [['data_movimentacao', 'DESC']]

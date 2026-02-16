@@ -7,6 +7,7 @@ const { upload } = require('../../middlewares/upload');
 
 // Rotas de chamados
 router.get('/', chamadoController.list);
+router.get('/metricas/sla', chamadoController.getMetricasSla);
 router.get('/:id', chamadoController.getById);
 router.post('/', chamadoController.create);
 router.put('/:id', chamadoController.update);
@@ -23,6 +24,7 @@ router.post('/:id/comentar', chamadoController.comentar);
 // Histórico e comentários
 router.get('/:id/historico', chamadoController.getHistorico);
 router.get('/:id/comentarios', chamadoController.getComentarios);
+router.get('/:id/sla-eventos', chamadoController.getSlaEventos);
 
 // Anexos
 router.get('/:id/anexos', anexoController.list);

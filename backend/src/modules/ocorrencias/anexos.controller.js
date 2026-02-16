@@ -8,7 +8,10 @@ class AnexoController {
       const { id: chamado_id } = req.params;
 
       // Verificar se chamado existe
-      const chamado = await Chamado.findByPk(chamado_id);
+      const chamadoWhere = { id: chamado_id };
+      if (req.tenantId) chamadoWhere.entidade_id = req.tenantId;
+
+      const chamado = await Chamado.findOne({ where: chamadoWhere });
       if (!chamado) {
         return res.status(404).json({
           success: false,
@@ -54,6 +57,17 @@ class AnexoController {
     try {
       const { id: chamado_id } = req.params;
 
+      const chamadoWhere = { id: chamado_id };
+      if (req.tenantId) chamadoWhere.entidade_id = req.tenantId;
+
+      const chamado = await Chamado.findOne({ where: chamadoWhere });
+      if (!chamado) {
+        return res.status(404).json({
+          success: false,
+          message: 'Chamado não encontrado'
+        });
+      }
+
       const anexos = await ChamadoAnexo.findAll({
         where: { chamado_id },
         include: [
@@ -83,11 +97,20 @@ class AnexoController {
     try {
       const { id } = req.params;
 
-      const anexo = await ChamadoAnexo.findByPk(id);
+      const anexo = await ChamadoAnexo.findByPk(id, {
+        include: [{ model: Chamado, as: 'chamado', attributes: ['id', 'entidade_id'] }]
+      });
       if (!anexo) {
         return res.status(404).json({
           success: false,
           message: 'Anexo não encontrado'
+        });
+      }
+
+      if (req.tenantId && anexo.chamado?.entidade_id !== req.tenantId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Sem permissão para acessar este anexo'
         });
       }
 
@@ -116,11 +139,20 @@ class AnexoController {
     try {
       const { id } = req.params;
 
-      const anexo = await ChamadoAnexo.findByPk(id);
+      const anexo = await ChamadoAnexo.findByPk(id, {
+        include: [{ model: Chamado, as: 'chamado', attributes: ['id', 'entidade_id'] }]
+      });
       if (!anexo) {
         return res.status(404).json({
           success: false,
           message: 'Anexo não encontrado'
+        });
+      }
+
+      if (req.tenantId && anexo.chamado?.entidade_id !== req.tenantId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Sem permissão para remover este anexo'
         });
       }
 

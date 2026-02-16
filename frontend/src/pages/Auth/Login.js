@@ -53,7 +53,7 @@ function Login() {
   return (
     <Box>
       <Typography variant="h4" align="center" gutterBottom>
-        Sistema de Chamados TI
+        Chamados TI
       </Typography>
       <Typography variant="body2" align="center" color="text.secondary" mb={3}>
         Faça login para continuar

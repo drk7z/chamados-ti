@@ -70,6 +70,11 @@ const Cliente = sequelize.define('Cliente', {
   atualizado_por: {
     type: DataTypes.UUID,
     allowNull: true
+  },
+  entidade_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: { model: 'entidades', key: 'id' }
   }
 }, {
   tableName: 'clientes',

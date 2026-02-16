@@ -198,7 +198,8 @@ const LogSistema = sequelize.define('LogSistema', {
   }
 }, {
   tableName: 'logs_sistema',
-  updatedAt: false
+  updatedAt: false,
+  paranoid: false
 });
 
 module.exports = { 

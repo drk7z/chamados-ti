@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { User, Role } = require('../../models');
+const { User, Role, Entidade } = require('../../models');
 const logger = require('../../utils/logger');
 
 class AuthController {
@@ -20,6 +20,9 @@ class AuthController {
           model: Role,
           as: 'roles',
           through: { attributes: [], paranoid: false }
+        }, {
+          model: Entidade,
+          as: 'entidade'
         }]
       });
 
@@ -74,6 +77,7 @@ class AuthController {
         { 
           id: user.id, 
           email: user.email,
+          entidade_id: user.entidade_id || null,
           roles: user.roles.map(r => r.nome)
         },
         process.env.JWT_SECRET,
@@ -99,6 +103,9 @@ class AuthController {
           model: Role,
           as: 'roles',
           through: { attributes: [], paranoid: false }
+        }, {
+          model: Entidade,
+          as: 'entidade'
         }]
       });
 
@@ -114,6 +121,7 @@ class AuthController {
         { 
           id: req.user.id, 
           email: req.user.email,
+          entidade_id: req.user.entidade_id || null,
           roles: req.user.roles.map(r => r.nome)
         },
         process.env.JWT_SECRET,

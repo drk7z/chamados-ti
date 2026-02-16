@@ -48,7 +48,8 @@ const ChamadoHistorico = sequelize.define('ChamadoHistorico', {
   }
 }, {
   tableName: 'chamado_historico',
-  updatedAt: false
+  updatedAt: false,
+  paranoid: false
 });
 
 module.exports = ChamadoHistorico;

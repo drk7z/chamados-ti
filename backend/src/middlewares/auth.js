@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
-const { User, Role, Permission, RolePermission } = require('../models');
+const { User, Role, Permission } = require('../models');
 const logger = require('../utils/logger');
+
+const isGlobalAdmin = (user) => {
+  return user?.roles?.some(role => role.nivel === 1) || false;
+};
 
 const authenticate = async (req, res, next) => {
   try {
@@ -30,15 +34,24 @@ const authenticate = async (req, res, next) => {
 
     // Adicionar usuário e permissões ao request
     req.user = user;
+    const uniquePermissions = new Set();
     req.permissions = [];
     
     if (user.roles) {
       user.roles.forEach(role => {
         if (role.permissions) {
-          req.permissions.push(...role.permissions);
+          role.permissions.forEach((permission) => {
+            const key = `${permission.modulo}:${permission.recurso}:${permission.acao}`;
+            if (!uniquePermissions.has(key)) {
+              uniquePermissions.add(key);
+              req.permissions.push(permission);
+            }
+          });
         }
       });
     }
+
+    req.isGlobalAdmin = isGlobalAdmin(user);
 
     next();
   } catch (error) {
@@ -64,7 +77,7 @@ const authorize = (modulo, recurso, acao) => {
 
     if (!hasPermission) {
       // Verificar se é admin (nível 1)
-      const isAdmin = req.user.roles?.some(role => role.nivel === 1);
+      const isAdmin = req.isGlobalAdmin || isGlobalAdmin(req.user);
       
       if (!isAdmin) {
         return res.status(403).json({ 
@@ -78,4 +91,4 @@ const authorize = (modulo, recurso, acao) => {
   };
 };
 
-module.exports = { authenticate, authorize };
+module.exports = { authenticate, authorize, isGlobalAdmin };
