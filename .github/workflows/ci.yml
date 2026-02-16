@@ -41,8 +41,12 @@ jobs:
           cache-dependency-path: |
             frontend/package-lock.json
 
+      - name: Debug lockfile TypeScript version
+        run: |
+          node -e "const lock=require('./frontend/package-lock.json'); const ts=lock?.packages?.['node_modules/typescript']?.version || 'not-found'; console.log('LOCK_TYPESCRIPT=' + ts);"
+
       - name: Install dependencies
-        run: npm ci --prefix frontend
+        run: npm install --prefix frontend
 
       - name: Run lint (if available)
         run: |
