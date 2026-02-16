@@ -2,10 +2,6 @@
   "name": "chamados-ti",
   "private": true,
   "version": "1.0.0",
-  "workspaces": [
-    "backend",
-    "frontend"
-  ],
   "scripts": {
     "ci:backend": "npm --prefix backend test -- --passWithNoTests",
     "ci:frontend:build": "npm --prefix frontend run build"
