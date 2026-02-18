@@ -22,6 +22,8 @@ import {
   TableRow,
 } from '@mui/material';
 import api from '../../services/api';
+import { normalizePtBrText } from '../../utils/text';
+import { selectA11yProps } from '../../utils/selectAccessibility';
 
 const statusColor = (tipo) => {
   switch (tipo) {
@@ -113,11 +115,12 @@ function ListarChamados() {
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               disabled={loadingStatus}
+              SelectProps={selectA11yProps}
             >
               <MenuItem value="">Todos</MenuItem>
               {(statusOptions || []).map((item) => (
                 <MenuItem key={item.id} value={item.id}>
-                  {item.nome}
+                  {normalizePtBrText(item.nome)}
                 </MenuItem>
               ))}
             </TextField>
@@ -165,15 +168,15 @@ function ListarChamados() {
                       <TableCell>{item.titulo}</TableCell>
                       <TableCell>
                         <Chip
-                          label={item.status?.nome || 'Sem status'}
+                          label={normalizePtBrText(item.status?.nome || 'Sem status')}
                           color={statusColor(item.status?.tipo)}
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>{item.prioridade?.nome || '-'}</TableCell>
+                      <TableCell>{normalizePtBrText(item.prioridade?.nome || '-')}</TableCell>
                       <TableCell>{item.tecnico_responsavel?.nome || 'Não atribuído'}</TableCell>
                       <TableCell>
-                        {item.created_at ? new Date(item.created_at).toLocaleString('pt-BR') : '-'}
+                        {item.createdAt ? new Date(item.createdAt).toLocaleString('pt-BR') : '-'}
                       </TableCell>
                     </TableRow>
                   ))}

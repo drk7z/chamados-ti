@@ -16,6 +16,7 @@ import {
   TableRow,
 } from '@mui/material';
 import api from '../../services/api';
+import { normalizePtBrText } from '../../utils/text';
 
 const statusColor = (tipo) => {
   switch (tipo) {
@@ -79,7 +80,7 @@ function MeusChamados() {
                     <TableCell>{item.titulo}</TableCell>
                     <TableCell>
                       <Chip
-                        label={item.status?.nome || 'Sem status'}
+                        label={normalizePtBrText(item.status?.nome || 'Sem status')}
                         size="small"
                         color={statusColor(item.status?.tipo)}
                       />

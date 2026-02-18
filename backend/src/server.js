@@ -12,9 +12,52 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const API_VERSION = process.env.API_VERSION || 'v1';
 
-if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', 1);
-}
+const configureTrustProxy = () => {
+  const trustProxyEnv = process.env.TRUST_PROXY;
+
+  if (typeof trustProxyEnv === 'string' && trustProxyEnv.trim() !== '') {
+    if (trustProxyEnv === 'true') {
+      app.set('trust proxy', 1);
+      return;
+    }
+
+    if (trustProxyEnv === 'false') {
+      app.set('trust proxy', false);
+      return;
+    }
+
+    app.set('trust proxy', trustProxyEnv);
+    return;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+    return;
+  }
+
+  app.set('trust proxy', 'loopback');
+};
+
+const validateSecurityBaseline = () => {
+  const minSecretLength = 32;
+  const jwtSecret = process.env.JWT_SECRET || '';
+
+  if (!jwtSecret || jwtSecret.length < minSecretLength) {
+    const message = `JWT_SECRET deve ter no mínimo ${minSecretLength} caracteres`;
+
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(message);
+    }
+
+    logger.warn(`⚠️ ${message} (ambiente não produtivo)`);
+  }
+
+  if (process.env.NODE_ENV === 'production' && process.env.ENFORCE_HTTPS !== 'true') {
+    logger.warn('⚠️ ENFORCE_HTTPS está desabilitado em produção');
+  }
+};
+
+configureTrustProxy();
 
 const envOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
@@ -113,6 +156,8 @@ app.use(errorHandler);
 // Inicialização do Servidor
 const startServer = async () => {
   try {
+    validateSecurityBaseline();
+
     // Testar conexão com banco
     await sequelize.authenticate();
     logger.info('📦 Conexão com banco de dados estabelecida');
@@ -126,10 +171,24 @@ const startServer = async () => {
     }
 
     // Iniciar servidor
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       logger.info(`🚀 Servidor rodando na porta ${PORT}`);
       logger.info(`🌍 Ambiente: ${process.env.NODE_ENV}`);
       logger.info(`📡 API: http://localhost:${PORT}/api/${API_VERSION}`);
+    });
+
+    server.on('error', (error) => {
+      if (error.code === 'EADDRINUSE') {
+        logger.error(`❌ Porta ${PORT} já está em uso. Existe outra instância do backend em execução.`);
+
+        if (process.env.NODE_ENV === 'development') {
+          logger.warn('ℹ️ Finalizando esta instância para evitar loop do nodemon.');
+          process.exit(0);
+          return;
+        }
+      }
+
+      throw error;
     });
   } catch (error) {
     logger.error('❌ Erro ao iniciar servidor:', error);

@@ -393,6 +393,9 @@ Veja a pasta `/docs` para documentação detalhada:
 - **[VERSIONAMENTO.md](docs/VERSIONAMENTO.md)** - Política de versionamento, commits, PRs e releases
 - **[SPRINT-02-ENCERRAMENTO.md](docs/SPRINT-02-ENCERRAMENTO.md)** - Resumo técnico de fechamento da Sprint 2
 - **[BACKLOG-SPRINT-03.md](docs/BACKLOG-SPRINT-03.md)** - Backlog executável da Sprint 3
+- **[SECURITY-DEVOPS-BASELINE.md](docs/SECURITY-DEVOPS-BASELINE.md)** - Status atual de segurança e DevOps
+- **[SAAS-SECURITY-DEVOPS-COMPLETE-KIT.md](docs/SAAS-SECURITY-DEVOPS-COMPLETE-KIT.md)** - Kit completo de referência para novos projetos
+- **[GITHUB-SECRETS-ENVIRONMENTS.md](docs/GITHUB-SECRETS-ENVIRONMENTS.md)** - Guia de configuração de Repository/Environment secrets
 
 ### Principais Endpoints
 

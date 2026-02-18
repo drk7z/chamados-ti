@@ -24,6 +24,7 @@ import Configuracoes from './pages/Admin/Configuracoes';
 
 // Store
 import { useAuthStore } from './store/authStore';
+import api from './services/api';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,11 +52,46 @@ const ProtectedRoute = ({ children }) => {
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
+const AuthBootstrap = () => {
+  const { isAuthenticated, token, logout, updateUser } = useAuthStore();
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const syncSession = async () => {
+      if (!isAuthenticated || !token) {
+        return;
+      }
+
+      try {
+        const response = await api.get('/auth/me');
+        if (isMounted && response?.data?.user) {
+          updateUser(response.data.user);
+        }
+      } catch (error) {
+        const status = error?.response?.status;
+        if (status === 401 && isMounted) {
+          logout();
+        }
+      }
+    };
+
+    syncSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, token, logout, updateUser]);
+
+  return null;
+};
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        <AuthBootstrap />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             {/* Rotas públicas */}

@@ -13,7 +13,8 @@ const {
   Unidade,
   Departamento,
   CentroCusto,
-  ChamadoTipo
+  ChamadoTipo,
+  ChamadoPrioridade
 } = require('../models');
 
 const ROLE_DEFINITIONS = [
@@ -324,6 +325,55 @@ const ensureChamadoBase = async () => {
   }
 };
 
+const PRIORIDADES_PADRAO = [
+  { nivel: 1, nome: 'Crítica', cor: '#F44336', tempo_resposta_horas: 1 },
+  { nivel: 2, nome: 'Alta', cor: '#FF9800', tempo_resposta_horas: 4 },
+  { nivel: 3, nome: 'Média', cor: '#FFC107', tempo_resposta_horas: 8 },
+  { nivel: 4, nome: 'Baixa', cor: '#4CAF50', tempo_resposta_horas: 24 }
+];
+
+const ensureChamadoPrioridades = async () => {
+  for (const prioridadeDef of PRIORIDADES_PADRAO) {
+    let prioridade = await ChamadoPrioridade.findOne({
+      where: { nivel: prioridadeDef.nivel },
+      paranoid: false
+    });
+
+    if (!prioridade) {
+      prioridade = await ChamadoPrioridade.findOne({
+        where: { nome: prioridadeDef.nome },
+        paranoid: false
+      });
+    }
+
+    if (!prioridade) {
+      prioridade = await ChamadoPrioridade.create({
+        nome: prioridadeDef.nome,
+        nivel: prioridadeDef.nivel,
+        cor: prioridadeDef.cor,
+        tempo_resposta_horas: prioridadeDef.tempo_resposta_horas,
+        ativo: true
+      });
+      logger.info(`🌱 Prioridade criada: ${prioridade.nome}`);
+      continue;
+    }
+
+    if (prioridade.deletedAt) {
+      await prioridade.restore();
+    }
+
+    await prioridade.update({
+      nome: prioridadeDef.nome,
+      nivel: prioridadeDef.nivel,
+      cor: prioridadeDef.cor,
+      tempo_resposta_horas: prioridadeDef.tempo_resposta_horas,
+      ativo: true
+    });
+
+    logger.info(`🌱 Prioridade já existente/normalizada: ${prioridade.nome}`);
+  }
+};
+
 const run = async () => {
   try {
     await sequelize.authenticate();
@@ -337,6 +387,7 @@ const run = async () => {
     await ensureTenantConfigs(entidade.id);
     await ensureOrganizationalBase(entidade.id);
     await ensureChamadoBase();
+    await ensureChamadoPrioridades();
 
     logger.info('✅ Seed executado com sucesso');
     process.exit(0);

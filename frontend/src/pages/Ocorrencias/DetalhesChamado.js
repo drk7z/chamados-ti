@@ -12,6 +12,7 @@ import {
   Alert,
   Stack,
   TextField,
+  MenuItem,
   Button,
   List,
   ListItem,
@@ -19,6 +20,7 @@ import {
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
+import { selectA11yProps } from '../../utils/selectAccessibility';
 
 const statusColor = (tipo) => {
   switch (tipo) {
@@ -44,6 +46,11 @@ function DetalhesChamado() {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const [comentario, setComentario] = React.useState('');
+  const [tecnicoId, setTecnicoId] = React.useState('');
+  const [areaId, setAreaId] = React.useState('');
+  const [motivoTransferencia, setMotivoTransferencia] = React.useState('');
+  const [motivoPausa, setMotivoPausa] = React.useState('');
+  const [solucao, setSolucao] = React.useState('');
 
   const {
     data: chamado,
@@ -78,6 +85,16 @@ function DetalhesChamado() {
     return response.data;
   });
 
+  const { data: tecnicos = [], isLoading: loadingTecnicos } = useQuery('ocorrencia-tecnicos', async () => {
+    const response = await api.get('/ocorrencias/config/tecnicos');
+    return response.data;
+  });
+
+  const { data: areas = [], isLoading: loadingAreas } = useQuery('ocorrencia-areas', async () => {
+    const response = await api.get('/ocorrencias/config/areas');
+    return response.data;
+  });
+
   const comentarMutation = useMutation(
     async () => {
       const response = await api.post(`/ocorrencias/${id}/comentar`, {
@@ -99,11 +116,90 @@ function DetalhesChamado() {
     }
   );
 
+  const actionMutation = useMutation(
+    async ({ action, payload = {} }) => {
+      const response = await api.post(`/ocorrencias/${id}/${action}`, payload);
+      return response.data;
+    },
+    {
+      onSuccess: (_data, variables) => {
+        const actionLabel = variables?.action || 'ação';
+        toast.success(`Ação executada: ${actionLabel}`);
+        queryClient.invalidateQueries(['ocorrencia-detalhes', id]);
+        queryClient.invalidateQueries(['ocorrencia-historico', id]);
+        queryClient.invalidateQueries(['ocorrencia-comentarios', id]);
+        queryClient.invalidateQueries(['ocorrencia-sla-eventos', id]);
+        queryClient.invalidateQueries('ocorrencias-list');
+        queryClient.invalidateQueries('dashboard-stats');
+        queryClient.invalidateQueries('dashboard-meus-chamados');
+        queryClient.invalidateQueries('dashboard-metricas-sla');
+      },
+      onError: (err) => {
+        toast.error(err?.response?.data?.error || 'Falha ao executar ação');
+      },
+    }
+  );
+
   const handleComentar = (event) => {
     event.preventDefault();
     if (!comentario.trim()) return;
     comentarMutation.mutate();
   };
+
+  const handleAtribuir = () => {
+    if (!tecnicoId.trim()) {
+      toast.error('Informe o ID do técnico para atribuir');
+      return;
+    }
+    actionMutation.mutate({ action: 'atribuir', payload: { tecnico_id: tecnicoId.trim() } });
+  };
+
+  const handleTransferir = () => {
+    if (!areaId.trim()) {
+      toast.error('Informe o ID da área para transferir');
+      return;
+    }
+    actionMutation.mutate({
+      action: 'transferir',
+      payload: {
+        area_id: areaId.trim(),
+        motivo: motivoTransferencia.trim() || undefined,
+      },
+    });
+  };
+
+  const handlePausar = () => {
+    if (!motivoPausa.trim()) {
+      toast.error('Informe o motivo da pausa');
+      return;
+    }
+    actionMutation.mutate({ action: 'pausar', payload: { motivo: motivoPausa.trim() } });
+  };
+
+  const handleRetomar = () => {
+    actionMutation.mutate({ action: 'retomar' });
+  };
+
+  const handleResolver = () => {
+    if (!solucao.trim()) {
+      toast.error('Informe a solução para resolver o chamado');
+      return;
+    }
+    actionMutation.mutate({ action: 'resolver', payload: { solucao: solucao.trim() } });
+  };
+
+  const handleFechar = () => {
+    actionMutation.mutate({ action: 'fechar' });
+  };
+
+  const handleReabrir = () => {
+    actionMutation.mutate({ action: 'reabrir' });
+  };
+
+  const statusTipo = chamado?.status?.tipo;
+  const isFechadoOuCancelado = ['fechado', 'cancelado'].includes(statusTipo);
+  const isResolvidoOuFechado = ['resolvido', 'fechado'].includes(statusTipo);
+  const isPausado = Boolean(chamado?.pausado);
 
   return (
     <Box>
@@ -217,6 +313,129 @@ function DetalhesChamado() {
                   )}
                 </List>
               )}
+            </Paper>
+
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Ações Operacionais
+              </Typography>
+
+              <Stack spacing={1.5}>
+                <TextField
+                  select
+                  size="small"
+                  label="Técnico para atribuição"
+                  value={tecnicoId}
+                  onChange={(event) => setTecnicoId(event.target.value)}
+                  disabled={loadingTecnicos}
+                  SelectProps={selectA11yProps}
+                >
+                  <MenuItem value="">Selecione</MenuItem>
+                  {tecnicos.map((item) => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {item.nome} ({item.email || 'sem email'})
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                <TextField
+                  select
+                  size="small"
+                  label="Área para transferência"
+                  value={areaId}
+                  onChange={(event) => setAreaId(event.target.value)}
+                  disabled={loadingAreas}
+                  SelectProps={selectA11yProps}
+                >
+                  <MenuItem value="">Selecione</MenuItem>
+                  {areas.map((item) => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {item.nome}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <Button
+                  variant="outlined"
+                  onClick={handleAtribuir}
+                  disabled={actionMutation.isLoading || isFechadoOuCancelado}
+                >
+                  Atribuir Técnico
+                </Button>
+                <TextField
+                  size="small"
+                  label="Motivo da transferência (opcional)"
+                  value={motivoTransferencia}
+                  onChange={(event) => setMotivoTransferencia(event.target.value)}
+                />
+                <Button
+                  variant="outlined"
+                  onClick={handleTransferir}
+                  disabled={actionMutation.isLoading || isFechadoOuCancelado}
+                >
+                  Transferir
+                </Button>
+
+                <TextField
+                  size="small"
+                  label="Motivo da pausa"
+                  value={motivoPausa}
+                  onChange={(event) => setMotivoPausa(event.target.value)}
+                />
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={handlePausar}
+                    disabled={actionMutation.isLoading || isFechadoOuCancelado || isPausado}
+                  >
+                    Pausar
+                  </Button>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={handleRetomar}
+                    disabled={actionMutation.isLoading || isFechadoOuCancelado || !isPausado}
+                  >
+                    Retomar
+                  </Button>
+                </Stack>
+
+                <TextField
+                  size="small"
+                  label="Solução"
+                  value={solucao}
+                  onChange={(event) => setSolucao(event.target.value)}
+                  multiline
+                  minRows={2}
+                />
+                <Button
+                  variant="contained"
+                  onClick={handleResolver}
+                  disabled={actionMutation.isLoading || isFechadoOuCancelado || statusTipo === 'resolvido'}
+                >
+                  Resolver
+                </Button>
+
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="success"
+                    onClick={handleFechar}
+                    disabled={actionMutation.isLoading || statusTipo === 'fechado' || statusTipo === 'cancelado'}
+                  >
+                    Fechar
+                  </Button>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={handleReabrir}
+                    disabled={actionMutation.isLoading || !isResolvidoOuFechado}
+                  >
+                    Reabrir
+                  </Button>
+                </Stack>
+              </Stack>
             </Paper>
 
             <Paper sx={{ p: 2 }}>

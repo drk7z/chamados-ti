@@ -27,6 +27,7 @@ import {
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { normalizePtBrText } from '../../utils/text';
 
 const statusColor = (tipo) => {
   switch (tipo) {
@@ -171,7 +172,7 @@ function Dashboard() {
                         <TableCell>{item.titulo}</TableCell>
                         <TableCell>
                           <Chip
-                            label={item.status?.nome || 'Sem status'}
+                            label={normalizePtBrText(item.status?.nome || 'Sem status')}
                             size="small"
                             color={statusColor(item.status?.tipo)}
                           />

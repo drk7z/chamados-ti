@@ -14,6 +14,8 @@ import {
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
+import { normalizePtBrText } from '../../utils/text';
+import { selectA11yProps } from '../../utils/selectAccessibility';
 
 function AbrirChamado() {
   const navigate = useNavigate();
@@ -145,10 +147,11 @@ function AbrirChamado() {
                   name="tipo_id"
                   value={form.tipo_id}
                   onChange={handleChange}
+                  SelectProps={selectA11yProps}
                 >
                   {tipos.map((item) => (
                     <MenuItem key={item.id} value={item.id}>
-                      {item.nome}
+                      {normalizePtBrText(item.nome)}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -163,10 +166,11 @@ function AbrirChamado() {
                   name="prioridade_id"
                   value={form.prioridade_id}
                   onChange={handleChange}
+                  SelectProps={selectA11yProps}
                 >
                   {prioridades.map((item) => (
                     <MenuItem key={item.id} value={item.id}>
-                      {item.nome}
+                      {normalizePtBrText(item.nome)}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -181,10 +185,11 @@ function AbrirChamado() {
                   name="status_id"
                   value={form.status_id}
                   onChange={handleChange}
+                  SelectProps={selectA11yProps}
                 >
                   {statusList.map((item) => (
                     <MenuItem key={item.id} value={item.id}>
-                      {item.nome}
+                      {normalizePtBrText(item.nome)}
                     </MenuItem>
                   ))}
                 </TextField>

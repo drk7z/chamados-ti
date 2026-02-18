@@ -10,7 +10,8 @@ const {
   LogSistema,
   SlaEvento,
   AreaAtendimento,
-  User 
+  User,
+  Role
 } = require('../../models');
 const { Op } = require('sequelize');
 const { auditLog } = require('../../utils/audit');
@@ -1027,6 +1028,52 @@ class ChamadoController {
         order: [['nivel', 'ASC']]
       });
       res.json(prioridades);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getTecnicos(req, res, next) {
+    try {
+      const where = { ativo: true };
+      if (req.tenantId) {
+        where.entidade_id = req.tenantId;
+      }
+
+      const tecnicos = await User.findAll({
+        where,
+        attributes: ['id', 'nome', 'email'],
+        include: [{
+          model: Role,
+          as: 'roles',
+          attributes: ['id', 'nome', 'nivel'],
+          through: { attributes: [], paranoid: false },
+          where: {
+            ativo: true,
+            nivel: {
+              [Op.lte]: 3
+            }
+          },
+          required: true
+        }],
+        order: [['nome', 'ASC']]
+      });
+
+      res.json(tecnicos);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getAreas(req, res, next) {
+    try {
+      const areas = await AreaAtendimento.findAll({
+        where: { ativo: true },
+        attributes: ['id', 'nome', 'email'],
+        order: [['nome', 'ASC']]
+      });
+
+      res.json(areas);
     } catch (error) {
       next(error);
     }

@@ -38,5 +38,7 @@ router.delete('/anexos/:id', anexoController.delete);
 router.get('/config/tipos', chamadoController.getTipos);
 router.get('/config/status', chamadoController.getStatus);
 router.get('/config/prioridades', chamadoController.getPrioridades);
+router.get('/config/tecnicos', chamadoController.getTecnicos);
+router.get('/config/areas', chamadoController.getAreas);
 
 module.exports = router;
