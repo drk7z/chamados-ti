@@ -5,6 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Analytics } from '@vercel/analytics/react';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -130,6 +131,7 @@ function App() {
           </Routes>
         </BrowserRouter>
         <ToastContainer position="top-right" autoClose={3000} />
+        <Analytics />
       </ThemeProvider>
     </QueryClientProvider>
   );
