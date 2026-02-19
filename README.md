@@ -2,11 +2,20 @@
 
 Sistema completo de **IT Service Management (ITSM)** e **IT Asset Management (ITAM)** inspirado em GLPI, desenvolvido com tecnologias modernas para gestão eficiente de chamados técnicos, inventário de ativos e base de conhecimento.
 
-![Version](https://img.shields.io/badge/version-1.3.1-blue)
-![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-green)
-![PostgreSQL](https://img.shields.io/badge/postgresql-14%2B-blue)
-![React](https://img.shields.io/badge/react-18.2-blue)
+![Version](https://img.shields.io/badge/version-1.3.2-blue)
 ![License](https://img.shields.io/badge/license-ISC-green)
+
+**Linguagens:**
+![JavaScript](https://img.shields.io/badge/javascript-ES2022-F7DF1E?logo=javascript&logoColor=black)
+![SQL](https://img.shields.io/badge/sql-postgresql-336791?logo=postgresql&logoColor=white)
+
+**Frameworks:**
+![React](https://img.shields.io/badge/react-18.2-61DAFB?logo=react&logoColor=black)
+![Express](https://img.shields.io/badge/express-4.18-000000?logo=express&logoColor=white)
+
+**Plataforma:**
+![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-339933?logo=node.js&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/postgresql-14%2B-336791?logo=postgresql&logoColor=white)
 
 ---
 
@@ -14,6 +23,7 @@ Sistema completo de **IT Service Management (ITSM)** e **IT Asset Management (IT
 
 - [Características](#-características)
 - [Módulos do Sistema](#-módulos-do-sistema)
+- [Linguagens do Projeto](#-linguagens-do-projeto)
 - [Tecnologias Utilizadas](#-tecnologias-utilizadas)
 - [Arquitetura](#-arquitetura)
 - [Pré-requisitos](#-pré-requisitos)
@@ -142,6 +152,20 @@ Sistema completo de **IT Service Management (ITSM)** e **IT Asset Management (IT
 - Tokens de acesso
 - Webhooks
 - Integração com terceiros
+
+---
+
+## 🧩 Linguagens do Projeto
+
+- **JavaScript**: backend (Node.js/Express) e frontend (React)
+- **SQL (PostgreSQL)**: schema, tabelas, índices, views e triggers
+- **Batch (.bat)**: script de inicialização em ambiente Windows (`start.bat`)
+- **Markdown**: documentação técnica e de produto em `README.md`, `docs/` e `CHANGELOG.md`
+
+### Frameworks e bibliotecas principais
+
+- **Frontend**: React, Material UI (MUI), React Router, Axios, Zustand, React Query
+- **Backend**: Node.js, Express, Sequelize, JWT, Bcrypt, Multer, Winston, Nodemailer
 
 ---
 
