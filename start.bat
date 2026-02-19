@@ -12,7 +12,7 @@ echo.
 echo    1. ▶️  Iniciar Sistema (Rápido)
 echo    2. 🔧 Iniciar com Diagnóstico Completo
 echo    3. 🛑 Parar Servidores
-echo    4. 🔍 Diagnosticar PostgreSQL
+echo    4. 🔍 Verificar PostgreSQL (Tudo em 1)
 echo    5. ❌ Sair
 echo.
 echo ═══════════════════════════════════════════════════════════
@@ -70,7 +70,7 @@ echo ✅ Iniciando servidores...
 echo.
 echo    Backend:  http://localhost:3001
 echo    Frontend: http://localhost:3000
-echo    Login:    admin / admin
+echo    Login:    admin@chamados-ti.com / admin
 echo.
 
 call :is_backend_healthy
@@ -106,6 +106,11 @@ REM Detecta PostgreSQL
 echo [1/4] Verificando PostgreSQL...
 set "PG_SERVICE="
 set "PG_RUNNING=0"
+set "PG_PROBE_PORT=5432"
+
+if exist "backend\.env" (
+    for /f "tokens=1,* delims==" %%A in ('findstr /R /C:"^DB_PORT=" "backend\.env" 2^>nul') do set "PG_PROBE_PORT=%%B"
+)
 
 REM Prioriza serviço em execução; se não houver, usa a maior versão instalada
 for %%s in (postgresql-x64-18 postgresql-x64-17 postgresql-x64-16 postgresql-x64-15 postgresql-x64-14 postgresql-x64-13 postgresql) do (
@@ -121,11 +126,54 @@ for %%s in (postgresql-x64-18 postgresql-x64-17 postgresql-x64-16 postgresql-x64
     )
 )
 
+REM Fallback: detecta qualquer serviço com prefixo postgresql
+if "%PG_SERVICE%"=="" (
+    for /f "tokens=2 delims=:" %%s in ('sc query type^= service state^= all ^| findstr /I /R "SERVICE_NAME: postgresql"') do (
+        set "PG_CANDIDATE=%%s"
+        set "PG_CANDIDATE=!PG_CANDIDATE: =!"
+        if "!PG_CANDIDATE!" NEQ "" (
+            if "!PG_SERVICE!"=="" set "PG_SERVICE=!PG_CANDIDATE!"
+            sc query "!PG_CANDIDATE!" | find /i "RUNNING" > nul 2>&1
+            if not errorlevel 1 (
+                set "PG_SERVICE=!PG_CANDIDATE!"
+                set "PG_RUNNING=1"
+                goto :pg_found
+            )
+        )
+    )
+)
+
 :pg_found
 if "%PG_SERVICE%"=="" (
-    echo ⚠️  PostgreSQL não detectado como serviço
-    set /p continuar="Continuar mesmo assim? (S/N): "
-    if /i not "%continuar%"=="S" goto :menu
+    powershell -NoProfile -Command "$ok=$false; try { $r=Test-NetConnection -ComputerName 'localhost' -Port %PG_PROBE_PORT% -WarningAction SilentlyContinue; if($r -and $r.TcpTestSucceeded){$ok=$true} } catch {}; if($ok){exit 0}else{exit 1}" >nul 2>&1
+    if not errorlevel 1 (
+        echo ✅ PostgreSQL detectado via conexão TCP na porta %PG_PROBE_PORT%.
+        echo    Nenhum serviço Windows encontrado - pode estar rodando via Laragon/contêiner.
+    ) else (
+        call :find_psql
+        if defined PSQL_CMD (
+            echo ⚠️  PostgreSQL instalado ^(psql encontrado^), mas sem serviço Windows e sem porta %PG_PROBE_PORT% aberta.
+            echo    Tentando iniciar automaticamente via pg_ctl...
+
+            call :try_start_postgres_local
+
+            powershell -NoProfile -Command "$ok=$false; try { $r=Test-NetConnection -ComputerName 'localhost' -Port %PG_PROBE_PORT% -WarningAction SilentlyContinue; if($r -and $r.TcpTestSucceeded){$ok=$true} } catch {}; if($ok){exit 0}else{exit 1}" >nul 2>&1
+            if not errorlevel 1 (
+                echo ✅ PostgreSQL iniciado automaticamente via pg_ctl.
+            ) else (
+                echo ⚠️  Não foi possível iniciar automaticamente.
+                echo    Verifique se o PostgreSQL foi iniciado ^(ex.: Laragon, pg_ctl, Docker^).
+                set /p continuar="Continuar mesmo assim? (S/N) [S]: "
+                if "%continuar%"=="" set "continuar=S"
+                if /i not "%continuar%"=="S" goto :menu
+            )
+        ) else (
+            echo ⚠️  PostgreSQL não detectado como serviço
+            set /p continuar="Continuar mesmo assim? (S/N) [S]: "
+            if "%continuar%"=="" set "continuar=S"
+            if /i not "%continuar%"=="S" goto :menu
+        )
+    )
 ) else (
     if "%PG_RUNNING%"=="1" (
         echo ✅ PostgreSQL rodando: %PG_SERVICE%
@@ -134,7 +182,8 @@ if "%PG_SERVICE%"=="" (
         net start %PG_SERVICE% > nul 2>&1
         if errorlevel 1 (
             echo ❌ Falha. Inicie manualmente: net start %PG_SERVICE%
-            set /p continuar="Continuar? (S/N): "
+            set /p continuar="Continuar? (S/N) [S]: "
+            if "%continuar%"=="" set "continuar=S"
             if /i not "%continuar%"=="S" goto :menu
         ) else (
             echo ✅ PostgreSQL iniciado: %PG_SERVICE%
@@ -185,7 +234,7 @@ echo.
 echo ═══════════════════════════════════════════════════════════
 echo    Backend:  http://localhost:3001
 echo    Frontend: http://localhost:3000
-echo    Login:    admin / admin
+echo    Login:    admin@chamados-ti.com / admin
 echo ═══════════════════════════════════════════════════════════
 echo.
 
@@ -288,13 +337,13 @@ if %NODE_MAJOR% GEQ 22 (
     echo ⚠️  Node.js %NODE_MAJOR% detectado.
     echo    Tentando alternar automaticamente para Node.js 20 LTS via nvm...
 
-    where nvm >nul 2>&1
-    if errorlevel 1 (
+    call :find_nvm
+    if not defined NVM_CMD (
         echo    nvm não encontrado no PATH.
         echo    Recomendado para o frontend com react-scripts: Node.js 20 LTS.
         echo    O sistema continua iniciando, mas pode exibir avisos de depreciação.
     ) else (
-        nvm use 20 >nul 2>&1
+        "%NVM_CMD%" use 20 >nul 2>&1
         if errorlevel 1 (
             echo    Não foi possível ativar Node.js 20 com nvm.
             echo    Verifique: nvm install 20 ^&^& nvm use 20
@@ -316,6 +365,114 @@ if %NODE_MAJOR% GEQ 22 (
         echo    Recomendado usar Node.js 20 LTS para melhor compatibilidade.
     ) else (
         echo ✅ Node.js %NODE_MAJOR% detectado.
+    )
+)
+
+exit /b 0
+
+REM ═══════════════════════════════════════════════════════════
+REM  AUXILIAR: TENTAR INICIAR POSTGRESQL LOCAL VIA PG_CTL
+REM ═══════════════════════════════════════════════════════════
+:try_start_postgres_local
+set "PG_LOCAL_STARTED=0"
+set "PG_CTL_CMD="
+set "PG_DATA_DIR="
+set "PG_LOG_FILE="
+
+call :find_psql
+if not defined PSQL_CMD exit /b 0
+
+if /i "%PSQL_CMD%"=="psql" exit /b 0
+
+for %%F in ("%PSQL_CMD%") do set "PG_PSQL_DIR=%%~dpF"
+if not defined PG_PSQL_DIR exit /b 0
+
+set "PG_CTL_CMD=%PG_PSQL_DIR%pg_ctl.exe"
+if not exist "%PG_CTL_CMD%" exit /b 0
+
+if exist "%PG_PSQL_DIR%..\data\PG_VERSION" set "PG_DATA_DIR=%PG_PSQL_DIR%..\data"
+
+if not defined PG_DATA_DIR (
+    for %%D in ("C:\Program Files\PostgreSQL\18\data" "C:\Program Files\PostgreSQL\17\data" "C:\Program Files\PostgreSQL\16\data" "C:\Program Files\PostgreSQL\15\data" "C:\Program Files\PostgreSQL\14\data") do (
+        if exist "%%~D\PG_VERSION" (
+            set "PG_DATA_DIR=%%~D"
+            goto :pg_data_found
+        )
+    )
+)
+
+:pg_data_found
+if not defined PG_DATA_DIR exit /b 0
+
+if not exist "%PG_DATA_DIR%\log" mkdir "%PG_DATA_DIR%\log" >nul 2>&1
+set "PG_LOG_FILE=%PG_DATA_DIR%\log\startup.log"
+
+"%PG_CTL_CMD%" status -D "%PG_DATA_DIR%" >nul 2>&1
+if not errorlevel 1 (
+    set "PG_LOCAL_STARTED=1"
+    exit /b 0
+)
+
+"%PG_CTL_CMD%" start -D "%PG_DATA_DIR%" -l "%PG_LOG_FILE%" >nul 2>&1
+if not errorlevel 1 set "PG_LOCAL_STARTED=1"
+
+exit /b 0
+
+REM ═══════════════════════════════════════════════════════════
+REM  AUXILIAR: DETECTAR NVM (PATH OU INSTALAÇÃO PADRÃO WINDOWS)
+REM ═══════════════════════════════════════════════════════════
+:find_nvm
+set "NVM_CMD="
+
+where nvm >nul 2>&1
+if not errorlevel 1 (
+    set "NVM_CMD=nvm"
+    exit /b 0
+)
+
+if defined NVM_HOME (
+    if exist "%NVM_HOME%\nvm.exe" (
+        set "NVM_CMD=%NVM_HOME%\nvm.exe"
+        exit /b 0
+    )
+)
+
+if exist "%AppData%\nvm\nvm.exe" (
+    set "NVM_CMD=%AppData%\nvm\nvm.exe"
+    exit /b 0
+)
+
+if exist "%ProgramFiles%\nvm\nvm.exe" (
+    set "NVM_CMD=%ProgramFiles%\nvm\nvm.exe"
+    exit /b 0
+)
+
+if exist "%ProgramFiles(x86)%\nvm\nvm.exe" (
+    set "NVM_CMD=%ProgramFiles(x86)%\nvm\nvm.exe"
+    exit /b 0
+)
+
+if defined ChocolateyInstall (
+    if exist "%ChocolateyInstall%\bin\nvm.exe" (
+        set "NVM_CMD=%ChocolateyInstall%\bin\nvm.exe"
+        exit /b 0
+    )
+)
+
+if exist "%ProgramData%\chocolatey\bin\nvm.exe" (
+    set "NVM_CMD=%ProgramData%\chocolatey\bin\nvm.exe"
+    exit /b 0
+)
+
+if exist "%USERPROFILE%\scoop\apps\nvm\current\nvm.exe" (
+    set "NVM_CMD=%USERPROFILE%\scoop\apps\nvm\current\nvm.exe"
+    exit /b 0
+)
+
+for /f "delims=" %%P in ('powershell -NoProfile -Command "$cmd = Get-Command nvm -ErrorAction SilentlyContinue; if($cmd){ $cmd.Source }" 2^>nul') do (
+    if exist "%%P" (
+        set "NVM_CMD=%%P"
+        exit /b 0
     )
 )
 
@@ -472,78 +629,121 @@ for /f "delims=" %%D in ('dir /b /ad-h /o-n "C:\Program Files\PostgreSQL" 2^>nul
 exit /b 0
 
 REM ═══════════════════════════════════════════════════════════
-REM  OPÇÃO 4: DIAGNÓSTICO POSTGRESQL
+REM  OPÇÃO 4: VERIFICAÇÃO COMPLETA POSTGRESQL
 REM ═══════════════════════════════════════════════════════════
 :diagnose
 cls
 echo.
 echo ═══════════════════════════════════════════════════════════
-echo    🔍 Diagnóstico PostgreSQL
+echo    🔍 Verificação PostgreSQL (Tudo em 1)
 echo ═══════════════════════════════════════════════════════════
 echo.
 
-echo [1] Procurando serviços PostgreSQL...
-echo.
+set "DB_HOST=localhost"
+set "DB_PORT=5432"
+set "DB_NAME=chamados_ti"
+set "DB_USER=postgres"
+set "DB_PASSWORD="
+
+if exist "backend\.env" (
+    for /f "tokens=1,* delims==" %%A in ('findstr /R /C:"^DB_HOST=" "backend\.env" 2^>nul') do set "DB_HOST=%%B"
+    for /f "tokens=1,* delims==" %%A in ('findstr /R /C:"^DB_PORT=" "backend\.env" 2^>nul') do set "DB_PORT=%%B"
+    for /f "tokens=1,* delims==" %%A in ('findstr /R /C:"^DB_NAME=" "backend\.env" 2^>nul') do set "DB_NAME=%%B"
+    for /f "tokens=1,* delims==" %%A in ('findstr /R /C:"^DB_USER=" "backend\.env" 2^>nul') do set "DB_USER=%%B"
+    for /f "tokens=1,* delims==" %%A in ('findstr /R /C:"^DB_PASSWORD=" "backend\.env" 2^>nul') do set "DB_PASSWORD=%%B"
+)
+
+echo [1/5] Detectando serviço PostgreSQL...
 set "FOUND=0"
-for /f "tokens=2" %%s in ('sc query type^= service state^= all ^| findstr /i "postgres"') do (
+set "RUNNING=0"
+for /f "tokens=2 delims=:" %%s in ('sc query type^= service state^= all ^| findstr /I /R "SERVICE_NAME: postgresql"') do (
     set "FOUND=1"
-    echo ✅ Serviço: %%s
-    sc query "%%s" | findstr "STATE"
-    echo.
+    set "SVC=%%s"
+    set "SVC=!SVC: =!"
+    echo    Serviço encontrado: !SVC!
+    sc query "!SVC!" | find /i "RUNNING" >nul 2>&1
+    if not errorlevel 1 (
+        set "RUNNING=1"
+    )
 )
 
 if "!FOUND!"=="0" (
-    echo ❌ Nenhum serviço PostgreSQL encontrado!
-    echo.
-    echo 💡 Verifique se PostgreSQL está instalado:
-    echo    - Download: https://www.postgresql.org/download/windows/
-    echo.
-)
-
-echo [2] Verificando executável...
-echo.
-call :find_psql
-if defined PSQL_CMD (
-    echo ✅ psql encontrado
-    "%PSQL_CMD%" --version
+    echo ⚠️  Nenhum serviço PostgreSQL registrado no Windows.
 ) else (
-    echo ❌ psql não encontrado no PATH
-    echo.
-    echo 💡 Se você usa Laragon, inicie o Laragon e tente novamente.
-)
-
-echo.
-echo [3] Testando conexão...
-echo.
-if not defined PSQL_CMD (
-    echo ❌ Não foi possível testar: psql indisponível
-) else (
-    "%PSQL_CMD%" -U postgres -d postgres -c "SELECT version();" 2>nul
-    if errorlevel 1 (
-        echo ❌ Falha na conexão
-        echo.
-        echo 💡 Verifique:
-        echo    1. PostgreSQL/Laragon está rodando?
-        echo    2. Senha do usuário 'postgres' está correta?
+    if "!RUNNING!"=="1" (
+        echo ✅ Serviço PostgreSQL em execução.
     ) else (
-        echo.
-        echo ✅ Conexão OK!
-        "%PSQL_CMD%" -U postgres -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='chamados_ti';" > "%temp%\chamados_ti_diag_db_check.txt" 2>nul
-        set "DIAG_DB_EXISTS="
-        set /p DIAG_DB_EXISTS=<"%temp%\chamados_ti_diag_db_check.txt"
-        del "%temp%\chamados_ti_diag_db_check.txt" >nul 2>&1
-
-        if "!DIAG_DB_EXISTS!"=="1" (
-            echo ✅ Banco 'chamados_ti' existe
-        ) else (
-            echo ⚠️  Banco 'chamados_ti' não existe
-            echo.
-            echo Para criar:
-            echo    "%PSQL_CMD%" -U postgres -d postgres -c "CREATE DATABASE chamados_ti;"
-            echo    "%PSQL_CMD%" -U postgres -d chamados_ti -f database\schema.sql
-        )
+        echo ⚠️  Serviço encontrado, mas não está rodando.
     )
 )
+
+echo.
+echo [2/5] Testando porta %DB_PORT% em %DB_HOST%...
+powershell -NoProfile -Command "$ok=$false; try { $r=Test-NetConnection -ComputerName '%DB_HOST%' -Port %DB_PORT% -WarningAction SilentlyContinue; if($r -and $r.TcpTestSucceeded){$ok=$true} } catch {}; if($ok){exit 0}else{exit 1}" >nul 2>&1
+if errorlevel 1 (
+    echo ⚠️  Porta %DB_PORT% fechada.
+    echo    Tentando iniciar PostgreSQL local via pg_ctl...
+    call :try_start_postgres_local
+
+    powershell -NoProfile -Command "$ok=$false; try { $r=Test-NetConnection -ComputerName '%DB_HOST%' -Port %DB_PORT% -WarningAction SilentlyContinue; if($r -and $r.TcpTestSucceeded){$ok=$true} } catch {}; if($ok){exit 0}else{exit 1}" >nul 2>&1
+    if errorlevel 1 (
+        echo ❌ Porta %DB_PORT% continua fechada após tentativa de inicialização.
+    ) else (
+        echo ✅ Porta %DB_PORT% aberta após auto-start.
+    )
+) else (
+    echo ✅ Porta %DB_PORT% está acessível.
+)
+
+echo.
+echo [3/5] Verificando executável psql...
+call :find_psql
+if defined PSQL_CMD (
+    echo ✅ psql encontrado: %PSQL_CMD%
+    "%PSQL_CMD%" --version
+) else (
+    echo ❌ psql não encontrado no PATH/Laragon/PostgreSQL.
+)
+
+echo.
+echo [4/5] Testando autenticação no PostgreSQL...
+if not defined PSQL_CMD (
+    echo ❌ Não foi possível testar autenticação sem psql.
+) else (
+    if defined DB_PASSWORD (
+        set "PGPASSWORD=%DB_PASSWORD%"
+    ) else (
+        set "PGPASSWORD="
+    )
+
+    "%PSQL_CMD%" -h "%DB_HOST%" -p "%DB_PORT%" -U "%DB_USER%" -d postgres -tAc "SELECT 1;" >nul 2>&1
+    if errorlevel 1 (
+        echo ❌ Falha na conexão/auth com o usuário '%DB_USER%'.
+        echo    Verifique DB_HOST/DB_PORT/DB_USER/DB_PASSWORD no backend\.env.
+    ) else (
+        echo ✅ Conexão e autenticação OK.
+    )
+)
+
+echo.
+echo [5/5] Verificando banco da aplicação...
+if not defined PSQL_CMD (
+    echo ⚠️  Banco '%DB_NAME%' não verificado (psql indisponível).
+) else (
+    "%PSQL_CMD%" -h "%DB_HOST%" -p "%DB_PORT%" -U "%DB_USER%" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='%DB_NAME%';" > "%temp%\chamados_ti_diag_db_check.txt" 2>nul
+    set "DIAG_DB_EXISTS="
+    set /p DIAG_DB_EXISTS=<"%temp%\chamados_ti_diag_db_check.txt"
+    del "%temp%\chamados_ti_diag_db_check.txt" >nul 2>&1
+
+    if "%DIAG_DB_EXISTS%"=="1" (
+        echo ✅ Banco '%DB_NAME%' existe.
+    ) else (
+        echo ⚠️  Banco '%DB_NAME%' não existe.
+        echo    Para criar: "%PSQL_CMD%" -h "%DB_HOST%" -p "%DB_PORT%" -U "%DB_USER%" -d postgres -c "CREATE DATABASE \"%DB_NAME%\";"
+    )
+)
+
+set "PGPASSWORD="
 
 echo.
 echo ═══════════════════════════════════════════════════════════
