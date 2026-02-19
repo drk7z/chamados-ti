@@ -8,6 +8,7 @@ const configuracoes = require('./configuracoes.routes');
 const entidadesRoutes = require('./entidades.routes');
 const logsRoutes = require('./logs.routes');
 const areasRoutes = require('./areas.routes');
+const gruposTecnicosRoutes = require('./grupos-tecnicos.routes');
 
 // Middleware para verificar se é admin
 const isAdmin = (req, res, next) => {
@@ -26,5 +27,6 @@ router.use('/configuracoes', configuracoes);
 router.use('/entidades', entidadesRoutes);
 router.use('/logs', logsRoutes);
 router.use('/areas', areasRoutes);
+router.use('/grupos-tecnicos', gruposTecnicosRoutes);
 
 module.exports = router;
