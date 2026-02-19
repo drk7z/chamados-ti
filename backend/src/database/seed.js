@@ -98,7 +98,7 @@ const ensureRoles = async () => {
 };
 
 const ensureAdminUser = async (entidadeId) => {
-  const adminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin';
+  const adminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin@chamados-ti.com';
   const adminNome = process.env.DEFAULT_ADMIN_NOME || 'Administrador';
   const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'admin';
   const senhaHash = await bcrypt.hash(adminPassword, 10);

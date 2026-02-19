@@ -43,7 +43,15 @@ function Login() {
       toast.success('Login realizado com sucesso!');
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error || 'Erro ao fazer login');
+      const normalizedEmail = (formData.email || '').trim().toLowerCase();
+      const normalizedPassword = (formData.senha || '').trim();
+      const backendError = err.response?.data?.error || 'Erro ao fazer login';
+
+      if (normalizedEmail === 'admin' && normalizedPassword === 'admin') {
+        setError('Use e-mail no login. Acesso padrão: admin@chamados-ti.com / admin');
+      } else {
+        setError(backendError);
+      }
       toast.error('Falha no login');
     } finally {
       setLoading(false);
@@ -68,13 +76,14 @@ function Login() {
       <form onSubmit={handleSubmit}>
         <TextField
           fullWidth
-          label="Usuário"
+          label="E-mail"
           name="email"
           type="text"
           value={formData.email}
           onChange={handleChange}
           margin="normal"
           required
+          helperText="Ex.: admin@chamados-ti.com"
           autoComplete="username"
           autoFocus
         />

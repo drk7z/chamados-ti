@@ -70,7 +70,7 @@ echo ✅ Iniciando servidores...
 echo.
 echo    Backend:  http://localhost:3001
 echo    Frontend: http://localhost:3000
-echo    Login:    admin / admin
+echo    Login:    admin@chamados-ti.com / admin
 echo.
 
 call :is_backend_healthy
@@ -234,7 +234,7 @@ echo.
 echo ═══════════════════════════════════════════════════════════
 echo    Backend:  http://localhost:3001
 echo    Frontend: http://localhost:3000
-echo    Login:    admin / admin
+echo    Login:    admin@chamados-ti.com / admin
 echo ═══════════════════════════════════════════════════════════
 echo.
 

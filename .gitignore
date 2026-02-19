@@ -1,15 +1,43 @@
-node_modules/
+# Environment Variables (⛔ NUNCA commitar)
 .env
-.DS_Store
-*.log
-logs/
-uploads/
+.env.local
+.env.*.local
+backend/.env
+backend/.env.local
+frontend/.env
+frontend/.env.local
+
+# Dependencies
+node_modules/
 dist/
 build/
-coverage/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# Uploads & Temporary Files
+uploads/
+.cache
+tmp/
+
+# IDE & OS
 .vscode/
 .idea/
+.DS_Store
 *.swp
 *.swo
 *~
-.cache
+.project
+.classpath
+
+# Coverage & Test Reports
+coverage/
+.nyc_output/
+
+# Secrets & Keys (redundância para segurança)
+*.pem
+*.key
+*.secret
+credentials.json

@@ -317,6 +317,7 @@ CREATE DATABASE chamados_ti;
 \c chamados_ti
 ```
 
+
 Execute o schema:
 
 ```bash
@@ -346,6 +347,33 @@ cp .env.example .env
 ```env
 REACT_APP_API_URL=http://localhost:3001/api
 ```
+
+---
+
+## 🔒 Primeiro Acesso & Segurança
+
+### ⚠️ Importante: Credenciais Padrão
+
+**Credenciais padrão estão em `backend/.env.example`** — este arquivo **É versionado** no git para referência apenas.
+
+Seu arquivo `.env` local **NÃO é versionado** (veja `.gitignore`) e deve conter suas credenciais reais.
+
+**Nunca commite `.env` ou qualquer arquivo com senhas no repositório.**
+
+### Primeiro Login
+
+1. Execute o backend com seed para criar o usuário padrão:
+   ```bash
+   cd backend
+   npm run seed
+   ```
+
+2. Acesse http://localhost:3000 e faça login com as credenciais do `backend/.env`
+
+3. **Em Produção**: Altere TODAS as senhas antes de deploy:
+   - Usuário admin da aplicação (edite `.env` e rode seed novamente)
+   - Senha do PostgreSQL (execute `ALTER USER postgres WITH PASSWORD '...'`)
+   - JWT_SECRET (gere uma chave forte)
 
 ---
 
