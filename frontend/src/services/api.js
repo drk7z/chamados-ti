@@ -64,6 +64,15 @@ const redirectToLoginOnce = () => {
 // Interceptor para adicionar token
 api.interceptors.request.use(
   (config) => {
+    const baseUrl = String(config.baseURL || api.defaults.baseURL || '').replace(/\/+$/, '');
+    const requestUrl = String(config.url || '');
+    const isBackendApiPath = /^\/(auth|home|ocorrencias|inventario|clientes|admin|conhecimento|external)(\/|$)/i.test(requestUrl);
+    const hasApiPrefixInBase = /\/api(\/v\d+)?$/i.test(baseUrl);
+
+    if (isBackendApiPath && !hasApiPrefixInBase && !requestUrl.startsWith('/api/')) {
+      config.url = `/api/v1${requestUrl}`;
+    }
+
     const token = useAuthStore.getState().token;
 
     if (token && isTokenExpired(token)) {
