@@ -19,6 +19,7 @@ import AbrirChamado from './pages/Ocorrencias/AbrirChamado';
 import DetalhesChamado from './pages/Ocorrencias/DetalhesChamado';
 import ListarAtivos from './pages/Inventario/ListarAtivos';
 import DetalhesAtivo from './pages/Inventario/DetalhesAtivo';
+import CatalogoSoftware from './pages/Inventario/CatalogoSoftware';
 import ListarClientes from './pages/Clientes/ListarClientes';
 import Configuracoes from './pages/Admin/Configuracoes';
 import Areas from './pages/Admin/Areas';
@@ -122,6 +123,7 @@ function App() {
 
               {/* Inventário */}
               <Route path="/inventario" element={<ListarAtivos />} />
+              <Route path="/inventario/software" element={<CatalogoSoftware />} />
               <Route path="/inventario/:id" element={<DetalhesAtivo />} />
 
               {/* Clientes */}

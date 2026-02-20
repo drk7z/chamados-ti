@@ -74,9 +74,31 @@ Invoke-WebRequest -Uri 'http://localhost:3001/api/inventario' -Headers $headers 
 	- `GET /api/admin/logs?entidade=area_atendimento`
 	- `GET /api/admin/logs?entidade=grupo_tecnico`
 
+## Validação inventário operacional (Sprint 5)
+1. Consultar catálogos de inventário:
+	- `GET /api/inventario/config/tipos`
+	- `GET /api/inventario/config/status`
+	- `GET /api/inventario/config/categorias`
+	- `GET /api/inventario/config/responsaveis`
+	- `GET /api/inventario/config/unidades`
+2. Criar ativo mínimo em `POST /api/inventario` com `codigo`, `nome`, `tipo_id`, `status_id`
+3. Movimentar ativo em `POST /api/inventario/:id/movimentar` com `localizacao_nova_id` e `motivo`
+4. Consultar histórico em `GET /api/inventario/:id/historico`
+5. Validar auditoria em `GET /api/admin/logs?modulo=inventario`
+
+## Validação catálogo de software (Sprint 6)
+1. Consultar catálogos:
+	- `GET /api/inventario/software/config/categorias`
+	- `GET /api/inventario/software/config/tipos-licenca`
+2. Criar software em `POST /api/inventario/software`
+3. Atualizar software em `PUT /api/inventario/software/:id`
+4. Inativar software em `DELETE /api/inventario/software/:id`
+5. Validar listagem em `GET /api/inventario/software`
+6. Validar auditoria em `GET /api/admin/logs?modulo=inventario&entidade=software`
+
 ## Última execução validada
 - Data: `2026-02-20`
-- Status: `Execução parcial concluída (admin Sprint 4 validado); pendente execução completa dos cenários Sprint 3`
+- Status: `Execução parcial concluída (admin Sprint 4 + inventário Sprint 5 + catálogo software Sprint 6 US-01); pendente execução completa dos cenários Sprint 3`
 - Endpoints validados anteriormente: `entidades`, `clientes (list/create/update/delete)`, `inventario (list)`, `admin logs`.
-- Escopo validado nesta execução: `auth/login`, `admin/areas`, `admin/grupos-tecnicos`, `admin/logs`.
+- Escopo validado nesta execução: `auth/login`, `admin/areas`, `admin/grupos-tecnicos`, `admin/logs`, `inventario/config/*`, `inventario create/movimentar/historico`, `inventario/software CRUD`.
 - Escopo pendente para validação completa: `ocorrencias (atribuir/transferir/pausar/retomar/comentar/resolver/fechar)`, `historico`, `sla-eventos`.

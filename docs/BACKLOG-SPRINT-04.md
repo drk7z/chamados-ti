@@ -48,10 +48,10 @@ Consolidar o eixo de **administração operacional** com foco em **áreas de ate
 
 ### Tarefas US-03
 
-- [ ] Evoluir consultas de `/api/admin/logs` com filtros operacionais adicionais (quando aplicável)
-- [ ] Garantir paginação segura e limites máximos padronizados
-- [ ] Revisar auditoria das rotas `/api/admin/usuarios` e `/api/admin/configuracoes`
-- [ ] Atualizar smoke checks para cobrir fluxo admin (áreas, grupos, logs)
+- [x] Evoluir consultas de `/api/admin/logs` com filtros operacionais adicionais (quando aplicável)
+- [x] Garantir paginação segura e limites máximos padronizados
+- [x] Revisar auditoria das rotas `/api/admin/usuarios` e `/api/admin/configuracoes`
+- [x] Atualizar smoke checks para cobrir fluxo admin (áreas, grupos, logs)
 
 ## US-04 — Frontend administrativo mínimo
 
@@ -93,3 +93,4 @@ Consolidar o eixo de **administração operacional** com foco em **áreas de ate
 ## Atualização de Progresso
 
 - 2026-02-19: US-04 concluída com telas operacionais mínimas de Admin (Áreas, Grupos Técnicos e Logs) integradas ao backend.
+- 2026-02-20: US-03 concluída com filtros avançados/paginação segura em logs, auditoria de usuários/configurações e smoke local (`admin/areas`, `admin/grupos-tecnicos`, `admin/logs`).

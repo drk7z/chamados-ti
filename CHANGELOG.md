@@ -1,5 +1,92 @@
 # Changelog - Sistema de Chamados TI
 
+## [1.6.0] - Sprint 6 (US-01 Catálogo de Software)
+
+### Added (1.6.0)
+
+- Backend de catálogo de software em `backend/src/modules/inventario/software.controller.js`.
+- Endpoints novos:
+  - `GET /api/inventario/software`
+  - `GET /api/inventario/software/:id`
+  - `POST /api/inventario/software`
+  - `PUT /api/inventario/software/:id`
+  - `DELETE /api/inventario/software/:id`
+  - `GET /api/inventario/software/config/categorias`
+  - `GET /api/inventario/software/config/tipos-licenca`
+- Tela de catálogo no frontend: `frontend/src/pages/Inventario/CatalogoSoftware.js`.
+
+### Changed (1.6.0)
+
+- Navegação do frontend com novo item de menu e rota para catálogo de software (`/inventario/software`).
+- Catálogos de categoria/tipo de licença com bootstrap mínimo automático para ambientes sem carga inicial.
+
+### Fixed (1.6.0)
+
+- Cobertura de validação e auditoria para create/update/inactivate de software.
+- Smoke check de software validado com ciclo completo (create/update/delete/list).
+
+## [1.5.1] - Sprint 5 (US-02/US-03/US-04)
+
+### Added (1.5.1)
+
+- Endpoints de configuração operacional de inventário:
+  - `GET /api/inventario/config/responsaveis`
+  - `GET /api/inventario/config/unidades`
+- Frontend de inventário operacional:
+  - `frontend/src/pages/Inventario/ListarAtivos.js`
+  - `frontend/src/pages/Inventario/DetalhesAtivo.js`
+
+### Changed (1.5.1)
+
+- Movimentação de ativos com execução transacional e regra de negócio de localização obrigatória.
+- Histórico de movimentação enriquecido com referências de localização/responsável/autor da ação.
+- Catálogos de inventário com bootstrap mínimo automático em ambiente sem carga inicial (`tipos`, `status`, `categorias`).
+
+### Fixed (1.5.1)
+
+- Correção de erro de validação em movimentação quando `localizacao_nova_id` ausente.
+- Ajuste de rastreabilidade no inventário com atualização consistente de `atualizado_por` em movimentações.
+- Smoke checks expandidos e validados para fluxo de inventário (`create` + `movimentar` + `historico`).
+
+## [1.5.0] - Sprint 5 (US-01 Inventário)
+
+### Added (1.5.0)
+
+- Filtros operacionais no inventário (`categoria`, `responsavel_id`, `cliente_id`, `ativo`, `descontinuado`, `busca`).
+- Inclusões de contexto em listagem/detalhe de ativos (`categoria`, `responsavel`, `localizacao_atual`).
+
+### Changed (1.5.0)
+
+- Validações de payload reforçadas em criação/atualização de ativos (`codigo`, `nome`, `tipo_id`, `status_id` e vínculos).
+- Paginação segura em listagem de inventário com limites máximos.
+- Regra de movimentação de ativo endurecida (motivo obrigatório e validação de destino/responsável).
+
+### Fixed (1.5.0)
+
+- Correção de ordenação das rotas de inventário para garantir funcionamento de `/api/inventario/config/*` antes de `/:id`.
+
+## [1.4.2] - Sprint 4 (US-03 concluída) + Sequência Sprint 5/6
+
+### Added (1.4.2)
+
+- Backlogs executáveis criados para continuidade:
+  - `docs/BACKLOG-SPRINT-05.md`
+  - `docs/BACKLOG-SPRINT-06.md`
+- Evolução dos filtros operacionais de `GET /api/admin/logs`:
+  - `entidade_id`, `ip`, `tenant_id` e busca ampliada por entidade
+
+### Changed (1.4.2)
+
+- Paginação de logs administrativos endurecida com parsing seguro e limite máximo padronizado.
+- Validação de datas (`data_inicio`, `data_fim`) em `/api/admin/logs` com retorno `400` para formato inválido.
+- Roadmap atualizado para status de fechamento da Sprint 4 e planejamento das Sprints 5 e 6.
+
+### Fixed (1.4.2)
+
+- Auditoria aplicada nas mutações de `/api/admin/usuarios` (create/update).
+- Auditoria aplicada em `/api/admin/configuracoes` (create/update).
+- Validação de tipo de configuração (`string|number|boolean|json`) em `/api/admin/configuracoes`.
+
 ## [1.4.1] - Sprint 4 (Admin Frontend Mínimo + Estabilidade Auth/CORS)
 
 ### Added (1.4.1)

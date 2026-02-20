@@ -4,8 +4,10 @@
 - Sprint 1: ✅ Concluída
 - Sprint 2: ✅ Concluída
 - Sprint 3: ✅ Concluída
-- Sprint 4: 🚀 Em andamento
-- Versão-alvo atual: `1.4.0`
+- Sprint 4: ✅ Concluída
+- Sprint 5: ✅ Concluída
+- Sprint 6: 🚀 Em andamento
+- Versão-alvo atual: `1.5.1`
 
 ## Objetivo
 Transformar o projeto atual em uma plataforma completa de gestão de serviços e ativos de TI, cobrindo segurança, multi-tenant, operações ITSM, ativos/CMDB, conhecimento e governança.
@@ -54,7 +56,7 @@ Transformar o projeto atual em uma plataforma completa de gestão de serviços e
 - Configurações administrativas essenciais
 - Logs e auditoria de eventos críticos
 
-**Status:** 🚀 Em andamento
+**Status:** ⚙️ Em fechamento
 
 **Critério de pronto da Fase 1:**
 - Fluxo de chamado ponta a ponta funcional por tenant
@@ -67,10 +69,16 @@ Transformar o projeto atual em uma plataforma completa de gestão de serviços e
 - CRUD completo de ativos, tipos, modelos e categorias
 - Localização, responsáveis e histórico de movimentação
 
+**Status:** ✅ Concluída
+
 ### Sprint 6 — Software e Licenças
 - Catálogo de software
 - Tipos de licença e atribuições
 - Vínculo software ↔ ativo
+
+**Status:** 🚀 Em andamento
+
+**Progresso atual:** US-01 (catálogo de software) entregue.
 
 ### Sprint 7 — CMDB
 - Serviços de negócio e dependências

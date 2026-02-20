@@ -3,6 +3,9 @@ const router = express.Router();
 const { Op } = require('sequelize');
 const { ConfiguracaoSistema } = require('../../models');
 const { isGlobalAdmin } = require('../../middlewares/auth');
+const { auditLog } = require('../../utils/audit');
+
+const TIPOS_PERMITIDOS = new Set(['string', 'number', 'boolean', 'json']);
 
 const parseValor = (tipo, valor) => {
   if (valor === null || valor === undefined) return null;
@@ -83,6 +86,10 @@ router.put('/', async (req, res) => {
       return res.status(400).json({ error: 'Campo chave é obrigatório' });
     }
 
+    if (!TIPOS_PERMITIDOS.has(tipo)) {
+      return res.status(400).json({ error: 'Tipo inválido. Utilize: string, number, boolean ou json' });
+    }
+
     if (escopo === 'global' && !globalAdmin) {
       return res.status(403).json({ error: 'Apenas administrador global pode alterar configurações globais' });
     }
@@ -94,8 +101,10 @@ router.put('/', async (req, res) => {
     const chaveEscopo = montarChaveEscopo(escopo === 'global' ? 'global' : 'tenant', tenantId, chave);
 
     const existente = await ConfiguracaoSistema.findOne({ where: { chave: chaveEscopo } });
+    const dadosAntes = existente?.toJSON ? existente.toJSON() : null;
 
     let configuracao;
+    let acaoAuditoria = 'create';
     if (existente) {
       await existente.update({
         valor: valor !== undefined && valor !== null ? String(valor) : null,
@@ -104,6 +113,7 @@ router.put('/', async (req, res) => {
         descricao
       });
       configuracao = existente;
+      acaoAuditoria = 'update';
     } else {
       configuracao = await ConfiguracaoSistema.create({
         chave: chaveEscopo,
@@ -114,6 +124,16 @@ router.put('/', async (req, res) => {
         editavel: true
       });
     }
+
+    await auditLog(req, {
+      modulo: 'admin',
+      acao: acaoAuditoria,
+      entidade: 'configuracao_sistema',
+      entidadeId: configuracao.id,
+      descricao: `Configuração ${acaoAuditoria === 'create' ? 'criada' : 'atualizada'}: ${configuracao.chave}`,
+      dadosAntes,
+      dadosDepois: configuracao.toJSON()
+    });
 
     res.json({
       message: 'Configuração salva com sucesso',
