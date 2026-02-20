@@ -106,6 +106,7 @@ function Login() {
 
       <form onSubmit={handleSubmit}>
         <TextField
+          id="login-email"
           fullWidth
           label="E-mail"
           name="email"
@@ -119,6 +120,7 @@ function Login() {
           autoFocus
         />
         <TextField
+          id="login-senha"
           fullWidth
           label="Senha"
           name="senha"

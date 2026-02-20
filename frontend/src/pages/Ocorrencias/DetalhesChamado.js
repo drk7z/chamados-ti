@@ -253,6 +253,8 @@ function DetalhesChamado() {
 
               <Box component="form" onSubmit={handleComentar} sx={{ mb: 2 }}>
                 <TextField
+                  id="detalhe-comentario"
+                  name="comentario"
                   fullWidth
                   multiline
                   minRows={3}
@@ -322,6 +324,8 @@ function DetalhesChamado() {
 
               <Stack spacing={1.5}>
                 <TextField
+                  id="detalhe-tecnico-atribuicao"
+                  name="tecnicoId"
                   select
                   size="small"
                   label="Técnico para atribuição"
@@ -339,6 +343,8 @@ function DetalhesChamado() {
                 </TextField>
 
                 <TextField
+                  id="detalhe-area-transferencia"
+                  name="areaId"
                   select
                   size="small"
                   label="Área para transferência"
@@ -362,6 +368,8 @@ function DetalhesChamado() {
                   Atribuir Técnico
                 </Button>
                 <TextField
+                  id="detalhe-motivo-transferencia"
+                  name="motivoTransferencia"
                   size="small"
                   label="Motivo da transferência (opcional)"
                   value={motivoTransferencia}
@@ -376,6 +384,8 @@ function DetalhesChamado() {
                 </Button>
 
                 <TextField
+                  id="detalhe-motivo-pausa"
+                  name="motivoPausa"
                   size="small"
                   label="Motivo da pausa"
                   value={motivoPausa}
@@ -401,6 +411,8 @@ function DetalhesChamado() {
                 </Stack>
 
                 <TextField
+                  id="detalhe-solucao"
+                  name="solucao"
                   size="small"
                   label="Solução"
                   value={solucao}

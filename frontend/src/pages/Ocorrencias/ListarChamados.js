@@ -101,6 +101,8 @@ function ListarChamados() {
         <Grid container spacing={2}>
           <Grid item xs={12} md={5}>
             <TextField
+              id="filtro-busca"
+              name="busca"
               fullWidth
               label="Buscar por título, descrição ou número"
               value={busca}
@@ -109,6 +111,8 @@ function ListarChamados() {
           </Grid>
           <Grid item xs={12} md={4}>
             <TextField
+              id="filtro-status"
+              name="status"
               fullWidth
               select
               label="Status"

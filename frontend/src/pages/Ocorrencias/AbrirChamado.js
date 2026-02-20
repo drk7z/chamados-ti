@@ -116,6 +116,7 @@ function AbrirChamado() {
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
+                  id="abrir-titulo"
                   fullWidth
                   required
                   label="Título"
@@ -127,6 +128,7 @@ function AbrirChamado() {
 
               <Grid item xs={12}>
                 <TextField
+                  id="abrir-descricao"
                   fullWidth
                   required
                   multiline
@@ -140,6 +142,7 @@ function AbrirChamado() {
 
               <Grid item xs={12} md={4}>
                 <TextField
+                  id="abrir-tipo"
                   fullWidth
                   required
                   select
@@ -159,6 +162,7 @@ function AbrirChamado() {
 
               <Grid item xs={12} md={4}>
                 <TextField
+                  id="abrir-prioridade"
                   fullWidth
                   required
                   select
@@ -178,6 +182,7 @@ function AbrirChamado() {
 
               <Grid item xs={12} md={4}>
                 <TextField
+                  id="abrir-status"
                   fullWidth
                   required
                   select

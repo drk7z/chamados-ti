@@ -33,7 +33,10 @@ const menuItems = [
   { text: 'Ocorrências', icon: <ConfirmationNumberIcon />, path: '/ocorrencias' },
   { text: 'Inventário', icon: <InventoryIcon />, path: '/inventario' },
   { text: 'Clientes', icon: <PeopleIcon />, path: '/clientes' },
-  { text: 'Administração', icon: <SettingsIcon />, path: '/admin/configuracoes' },
+  { text: 'Admin Configurações', icon: <SettingsIcon />, path: '/admin/configuracoes' },
+  { text: 'Admin Áreas', icon: <SettingsIcon />, path: '/admin/areas' },
+  { text: 'Admin Grupos', icon: <SettingsIcon />, path: '/admin/grupos-tecnicos' },
+  { text: 'Admin Logs', icon: <SettingsIcon />, path: '/admin/logs' },
 ];
 
 function MainLayout() {

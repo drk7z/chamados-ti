@@ -21,6 +21,9 @@ import ListarAtivos from './pages/Inventario/ListarAtivos';
 import DetalhesAtivo from './pages/Inventario/DetalhesAtivo';
 import ListarClientes from './pages/Clientes/ListarClientes';
 import Configuracoes from './pages/Admin/Configuracoes';
+import Areas from './pages/Admin/Areas';
+import GruposTecnicos from './pages/Admin/GruposTecnicos';
+import Logs from './pages/Admin/Logs';
 
 // Store
 import { useAuthStore } from './store/authStore';
@@ -126,6 +129,9 @@ function App() {
 
               {/* Admin */}
               <Route path="/admin/configuracoes" element={<Configuracoes />} />
+              <Route path="/admin/areas" element={<Areas />} />
+              <Route path="/admin/grupos-tecnicos" element={<GruposTecnicos />} />
+              <Route path="/admin/logs" element={<Logs />} />
             </Route>
           </Routes>
         </BrowserRouter>
