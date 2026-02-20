@@ -34,10 +34,10 @@ Implementar núcleo de **Software e Licenças** com controle de atribuição por
 
 ### Tarefas US-02
 
-- [ ] Modelar/validar entidade de licença (quantidade, tipo, validade)
-- [ ] Implementar operações de cadastro/atualização/inativação
-- [ ] Expor visão de licenças próximas do vencimento
-- [ ] Adicionar logs de auditoria para alterações críticas
+- [x] Modelar/validar entidade de licença (quantidade, tipo, validade)
+- [x] Implementar operações de cadastro/atualização/inativação
+- [x] Expor visão de licenças próximas do vencimento
+- [x] Adicionar logs de auditoria para alterações críticas
 
 ## US-03 — Atribuição software ↔ ativo/usuário
 
@@ -61,7 +61,7 @@ Implementar núcleo de **Software e Licenças** com controle de atribuição por
 ### Tarefas US-04
 
 - [ ] Criar página de catálogo de software no frontend
-- [ ] Criar página de licenças com status (vigente/próxima do vencimento/vencida)
+- [x] Criar página de licenças com status (vigente/próxima do vencimento/vencida)
 - [ ] Criar fluxo de atribuição e revogação
 - [ ] Integrar feedback visual e tratamento de erro padrão
 
@@ -89,4 +89,6 @@ Implementar núcleo de **Software e Licenças** com controle de atribuição por
 ## Atualização de Progresso
 
 - 2026-02-20: US-01 parcialmente concluída com catálogo de software operacional (CRUD, filtros, validações, auditoria e frontend mínimo).
+- 2026-02-20: US-02 concluída com endpoints de licenças (`/api/inventario/licencas` + `proximas-expiracao`), validações de conformidade e auditoria de operações críticas.
+- 2026-02-20: US-04 evoluída com página frontend de licenças (`/inventario/licencas`) exibindo status de vencimento e alertas.
 - Pendência US-01: fechamento de escopo tenant para `softwares` depende de estratégia de persistência com `entidade_id` (não presente na modelagem atual).

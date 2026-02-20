@@ -1,5 +1,28 @@
 # Changelog - Sistema de Chamados TI
 
+## [1.6.1] - Sprint 6 (US-02 Licenças + Frontend)
+
+### Added (1.6.1)
+
+- Backend de licenças em `backend/src/modules/inventario/licencas.controller.js`.
+- Endpoints novos:
+  - `GET /api/inventario/licencas`
+  - `POST /api/inventario/licencas`
+  - `PUT /api/inventario/licencas/:id`
+  - `DELETE /api/inventario/licencas/:id`
+  - `GET /api/inventario/licencas/proximas-expiracao`
+- Tela de licenças no frontend: `frontend/src/pages/Inventario/LicencasSoftware.js`.
+
+### Changed (1.6.1)
+
+- Navegação do frontend com novo item e rota para licenças (`/inventario/licencas`).
+- Backlog e smoke checks da Sprint 6 atualizados para refletir conclusão da US-02.
+
+### Fixed (1.6.1)
+
+- Validações de conformidade de licença (quantidade x uso, datas e vínculos de catálogo).
+- Auditoria para operações críticas de licença (`create`, `update`, `inactivate`).
+
 ## [1.6.0] - Sprint 6 (US-01 Catálogo de Software)
 
 ### Added (1.6.0)

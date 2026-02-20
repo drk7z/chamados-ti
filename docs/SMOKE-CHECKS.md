@@ -96,9 +96,17 @@ Invoke-WebRequest -Uri 'http://localhost:3001/api/inventario' -Headers $headers 
 5. Validar listagem em `GET /api/inventario/software`
 6. Validar auditoria em `GET /api/admin/logs?modulo=inventario&entidade=software`
 
+## Validação licenças de software (Sprint 6 US-02)
+1. Listar licenças em `GET /api/inventario/licencas`
+2. Criar licença em `POST /api/inventario/licencas`
+3. Atualizar licença em `PUT /api/inventario/licencas/:id`
+4. Consultar janela de expiração em `GET /api/inventario/licencas/proximas-expiracao?dias=30`
+5. Inativar licença em `DELETE /api/inventario/licencas/:id`
+6. Validar auditoria em `GET /api/admin/logs?modulo=inventario&entidade=licenca`
+
 ## Última execução validada
 - Data: `2026-02-20`
-- Status: `Execução parcial concluída (admin Sprint 4 + inventário Sprint 5 + catálogo software Sprint 6 US-01); pendente execução completa dos cenários Sprint 3`
+- Status: `Execução parcial concluída (admin Sprint 4 + inventário Sprint 5 + Sprint 6 US-01/US-02); pendente execução completa dos cenários Sprint 3`
 - Endpoints validados anteriormente: `entidades`, `clientes (list/create/update/delete)`, `inventario (list)`, `admin logs`.
-- Escopo validado nesta execução: `auth/login`, `admin/areas`, `admin/grupos-tecnicos`, `admin/logs`, `inventario/config/*`, `inventario create/movimentar/historico`, `inventario/software CRUD`.
+- Escopo validado nesta execução: `auth/login`, `admin/areas`, `admin/grupos-tecnicos`, `admin/logs`, `inventario/config/*`, `inventario create/movimentar/historico`, `inventario/software CRUD`, `inventario/licencas (create/update/list/proximas-expiracao/delete)`.
 - Escopo pendente para validação completa: `ocorrencias (atribuir/transferir/pausar/retomar/comentar/resolver/fechar)`, `historico`, `sla-eventos`.

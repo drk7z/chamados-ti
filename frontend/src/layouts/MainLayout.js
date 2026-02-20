@@ -33,6 +33,7 @@ const menuItems = [
   { text: 'Ocorrências', icon: <ConfirmationNumberIcon />, path: '/ocorrencias' },
   { text: 'Inventário', icon: <InventoryIcon />, path: '/inventario' },
   { text: 'Software', icon: <InventoryIcon />, path: '/inventario/software' },
+  { text: 'Licenças', icon: <InventoryIcon />, path: '/inventario/licencas' },
   { text: 'Clientes', icon: <PeopleIcon />, path: '/clientes' },
   { text: 'Admin Configurações', icon: <SettingsIcon />, path: '/admin/configuracoes' },
   { text: 'Admin Áreas', icon: <SettingsIcon />, path: '/admin/areas' },
