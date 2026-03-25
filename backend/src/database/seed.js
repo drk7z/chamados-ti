@@ -25,6 +25,35 @@ const ROLE_DEFINITIONS = [
   { nome: 'Auditor', nivel: 5, descricao: 'Perfil de auditoria e leitura' }
 ];
 
+const MIN_ADMIN_PASSWORD_LENGTH = parseInt(process.env.MIN_ADMIN_PASSWORD_LENGTH || '12', 10);
+const WEAK_ADMIN_PASSWORDS = new Set([
+  'admin',
+  '123456',
+  '12345678',
+  'password',
+  'changeme',
+  'default'
+]);
+
+const isSecureAdminPassword = (password) => {
+  if (typeof password !== 'string') {
+    return false;
+  }
+
+  const normalizedPassword = password.trim();
+
+  // Em desenvolvimento, aceita qualquer senha não vazia
+  if (process.env.NODE_ENV !== 'production') {
+    return normalizedPassword.length > 0;
+  }
+
+  if (normalizedPassword.length < MIN_ADMIN_PASSWORD_LENGTH) {
+    return false;
+  }
+
+  return !WEAK_ADMIN_PASSWORDS.has(normalizedPassword.toLowerCase());
+};
+
 const getOrCreateEntidadeDefault = async () => {
   const nomeEntidade = process.env.DEFAULT_ENTIDADE_NOME || 'Empresa Padrão';
 
@@ -98,10 +127,16 @@ const ensureRoles = async () => {
 };
 
 const ensureAdminUser = async (entidadeId) => {
-  const adminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin@chamados-ti.com';
+  const adminEmail = (process.env.DEFAULT_ADMIN_EMAIL || '').trim().toLowerCase();
   const adminNome = process.env.DEFAULT_ADMIN_NOME || 'Administrador';
-  const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'admin';
-  const senhaHash = await bcrypt.hash(adminPassword, 10);
+  const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || '';
+  const resetAdminPasswordOnSeed = process.env.RESET_ADMIN_PASSWORD_ON_SEED === 'true';
+  const secureAdminPasswordConfigured = isSecureAdminPassword(adminPassword);
+
+  if (!adminEmail) {
+    logger.warn('⚠️ Seed sem usuário administrador: configure DEFAULT_ADMIN_EMAIL e DEFAULT_ADMIN_PASSWORD no backend/.env');
+    return null;
+  }
 
   let admin = await User.findOne({
     where: { email: adminEmail },
@@ -109,6 +144,11 @@ const ensureAdminUser = async (entidadeId) => {
   });
 
   if (!admin) {
+    if (!secureAdminPasswordConfigured) {
+      logger.warn(`⚠️ Seed sem criação do admin ${adminEmail}: DEFAULT_ADMIN_PASSWORD deve ter no mínimo ${MIN_ADMIN_PASSWORD_LENGTH} caracteres e não pode ser uma senha fraca.`);
+      return null;
+    }
+
     admin = await User.create({
       nome: adminNome,
       email: adminEmail,
@@ -124,16 +164,26 @@ const ensureAdminUser = async (entidadeId) => {
       await admin.restore();
     }
 
-    await admin.update({
+    const adminUpdates = {
       nome: adminNome,
       ativo: true,
       tentativas_login: 0,
       bloqueado_ate: null,
-      entidade_id: admin.entidade_id || entidadeId,
-      senha: senhaHash
-    }, { hooks: false });
+      entidade_id: admin.entidade_id || entidadeId
+    };
 
-    logger.info(`🌱 Usuário admin já existente/atualizado: ${admin.email}`);
+    if (resetAdminPasswordOnSeed) {
+      if (!secureAdminPasswordConfigured) {
+        logger.warn(`⚠️ RESET_ADMIN_PASSWORD_ON_SEED ignorado para ${adminEmail}: DEFAULT_ADMIN_PASSWORD inválida ou fraca.`);
+      } else {
+        const senhaHash = await bcrypt.hash(adminPassword, 10);
+        adminUpdates.senha = senhaHash;
+      }
+    }
+
+    await admin.update(adminUpdates, { hooks: false });
+
+    logger.info(`🌱 Usuário admin já existente/normalizado: ${admin.email}`);
   }
 
   return admin;
@@ -383,7 +433,11 @@ const run = async () => {
     const roles = await ensureRoles();
     const admin = await ensureAdminUser(entidade.id);
 
-    await ensureAdminRoleLink(admin.id, roles.Administrador.id);
+    if (admin) {
+      await ensureAdminRoleLink(admin.id, roles.Administrador.id);
+    } else {
+      logger.warn('⚠️ Vínculo da role Administrador não aplicado porque nenhum usuário admin seguro foi configurado.');
+    }
     await ensureTenantConfigs(entidade.id);
     await ensureOrganizationalBase(entidade.id);
     await ensureChamadoBase();

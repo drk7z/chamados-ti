@@ -9,6 +9,7 @@ import {
   Grid,
   MenuItem,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -60,9 +61,12 @@ function ListarAtivos() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Gerenciar Ativos
-      </Typography>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+        <Typography variant="h4">Gerenciar Ativos</Typography>
+        <Button variant="contained" onClick={() => navigate('/inventario/novo')}>
+          Novo Ativo
+        </Button>
+      </Stack>
 
       <Paper sx={{ p: 2, mb: 2 }}>
         <Grid container spacing={2}>

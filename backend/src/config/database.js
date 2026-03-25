@@ -8,21 +8,29 @@ const buildDialectOptions = () => {
     return undefined;
   }
 
+  // Nota: `require` não é uma opção nativa do driver pg — passá-lo causa o aviso
+  // "libpq SSL mode definitions" e pode encerrar a conexão inesperadamente.
+  // O sslmode=require já fica na DATABASE_URL; aqui só controlamos rejectUnauthorized.
   return {
     ssl: {
-      require: true,
       rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true'
     }
   };
 };
+
+// Para conexões cloud (DATABASE_URL), o pool.min alto causa picos de conexão na
+// inicialização que o Render.com pode rejeitar. Usar valor menor nesses casos.
+const poolMin = process.env.DATABASE_URL
+  ? parseInt(process.env.DB_POOL_MIN_CLOUD, 10) || 1
+  : parseInt(process.env.DB_POOL_MIN, 10) || 2;
 
 const baseConfig = {
   dialect: 'postgres',
   logging: (msg) => logger.debug(msg),
   pool: {
     max: parseInt(process.env.DB_POOL_MAX, 10) || 20,
-    min: parseInt(process.env.DB_POOL_MIN, 10) || 5,
-    acquire: 30000,
+    min: poolMin,
+    acquire: parseInt(process.env.DB_POOL_ACQUIRE_MS, 10) || 60000,
     idle: 10000
   },
   define: {

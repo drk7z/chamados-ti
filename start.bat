@@ -3,6 +3,14 @@ setlocal EnableDelayedExpansion
 chcp 65001 > nul
 cls
 
+set "AUTO_FLOW=1"
+set "START_SUCCESS=0"
+
+if /i "%~1"=="menu" set "AUTO_FLOW=0"
+if /i "%~1"=="manual" set "AUTO_FLOW=0"
+
+if "%AUTO_FLOW%"=="1" goto :auto_start
+
 :menu
 echo.
 echo ═══════════════════════════════════════════════════════════
@@ -18,11 +26,17 @@ echo.
 echo ═══════════════════════════════════════════════════════════
 set /p opcao="Escolha uma opção (1-5): "
 
-if "%opcao%"=="1" goto :start_quick
-if "%opcao%"=="2" goto :start_full
+if "%opcao%"=="1" (
+    call :start_quick
+    exit /b 0
+)
+if "%opcao%"=="2" (
+    call :start_full
+    exit /b 0
+)
 if "%opcao%"=="3" goto :stop
 if "%opcao%"=="4" goto :diagnose
-if "%opcao%"=="5" exit
+if "%opcao%"=="5" exit /b 0
 cls
 echo ❌ Opção inválida!
 timeout /t 2 > nul
@@ -30,9 +44,42 @@ cls
 goto :menu
 
 REM ═══════════════════════════════════════════════════════════
+REM  INICIALIZAÇÃO AUTOMÁTICA COM FALLBACK
+REM ═══════════════════════════════════════════════════════════
+:auto_start
+cls
+echo.
+echo ═══════════════════════════════════════════════════════════
+echo    🤖 Inicialização Automática
+echo ═══════════════════════════════════════════════════════════
+echo.
+echo    Tentando opção 1 ^(rápida^)...
+echo.
+
+call :start_quick
+if "%START_SUCCESS%"=="1" exit /b 0
+
+echo.
+echo ⚠️  A opção 1 não concluiu a inicialização automaticamente.
+echo    Tentando opção 2 ^(diagnóstico completo^)...
+echo.
+
+call :start_full
+if "%START_SUCCESS%"=="1" exit /b 0
+
+echo.
+echo ❌ A inicialização automática falhou nos modos 1 e 2.
+echo    Executando diagnóstico PostgreSQL e abrindo o menu manual...
+echo.
+
+call :diagnose
+goto :menu
+
+REM ═══════════════════════════════════════════════════════════
 REM  OPÇÃO 1: INICIAR RÁPIDO
 REM ═══════════════════════════════════════════════════════════
 :start_quick
+set "START_SUCCESS=0"
 cls
 echo.
 echo ═══════════════════════════════════════════════════════════
@@ -41,6 +88,7 @@ echo ═════════════════════════
 echo.
 
 call :check_node_version
+if "%START_BLOCKED%"=="1" goto :start_quick_end
 
 REM Instala dependências se necessário
 if not exist "backend\node_modules" (
@@ -70,7 +118,7 @@ echo ✅ Iniciando servidores...
 echo.
 echo    Backend:  http://localhost:3001
 echo    Frontend: http://localhost:3000
-echo    Login:    admin@chamados-ti.com / admin
+echo    Admin:    configure DEFAULT_ADMIN_EMAIL e DEFAULT_ADMIN_PASSWORD em backend\.env
 echo.
 
 call :is_backend_healthy
@@ -84,15 +132,25 @@ if "%BACKEND_READY%"=="1" (
 
 call :free_port 3000 Frontend
 start "Frontend - Chamados TI" cmd /c "cd /d %~dp0frontend && npm start"
+call :wait_frontend_healthy
 
-echo ✅ Sistema iniciado!
+if "%BACKEND_READY%"=="1" if "%FRONTEND_READY%"=="1" set "START_SUCCESS=1"
+
+if "%START_SUCCESS%"=="1" (
+    echo ✅ Sistema iniciado!
+) else (
+    echo ⚠️  A inicialização rápida não confirmou backend/frontend no tempo esperado.
+)
 echo.
+
+:start_quick_end
 timeout /t 3 > nul
-exit
+exit /b 0
 
 REM  OPÇÃO 2: INICIAR COM DIAGNÓSTICO
 REM ═══════════════════════════════════════════════════════════
 :start_full
+set "START_SUCCESS=0"
 cls
 echo.
 echo ═══════════════════════════════════════════════════════════
@@ -101,6 +159,7 @@ echo ═════════════════════════
 echo.
 
 call :check_node_version
+if "%START_BLOCKED%"=="1" goto :start_full_end
 
 REM Detecta PostgreSQL
 echo [1/4] Verificando PostgreSQL...
@@ -163,15 +222,25 @@ if "%PG_SERVICE%"=="" (
             ) else (
                 echo ⚠️  Não foi possível iniciar automaticamente.
                 echo    Verifique se o PostgreSQL foi iniciado ^(ex.: Laragon, pg_ctl, Docker^).
-                set /p continuar="Continuar mesmo assim? (S/N) [S]: "
-                if "%continuar%"=="" set "continuar=S"
-                if /i not "%continuar%"=="S" goto :menu
+                if "%AUTO_FLOW%"=="1" (
+                    set "continuar=S"
+                    echo    Modo automático: seguindo para próxima verificação.
+                ) else (
+                    set /p continuar="Continuar mesmo assim? (S/N) [S]: "
+                    if "%continuar%"=="" set "continuar=S"
+                    if /i not "%continuar%"=="S" goto :start_full_end
+                )
             )
         ) else (
             echo ⚠️  PostgreSQL não detectado como serviço
-            set /p continuar="Continuar mesmo assim? (S/N) [S]: "
-            if "%continuar%"=="" set "continuar=S"
-            if /i not "%continuar%"=="S" goto :menu
+            if "%AUTO_FLOW%"=="1" (
+                set "continuar=S"
+                echo    Modo automático: seguindo para próxima verificação.
+            ) else (
+                set /p continuar="Continuar mesmo assim? (S/N) [S]: "
+                if "%continuar%"=="" set "continuar=S"
+                if /i not "%continuar%"=="S" goto :start_full_end
+            )
         )
     )
 ) else (
@@ -182,9 +251,14 @@ if "%PG_SERVICE%"=="" (
         net start %PG_SERVICE% > nul 2>&1
         if errorlevel 1 (
             echo ❌ Falha. Inicie manualmente: net start %PG_SERVICE%
-            set /p continuar="Continuar? (S/N) [S]: "
-            if "%continuar%"=="" set "continuar=S"
-            if /i not "%continuar%"=="S" goto :menu
+            if "%AUTO_FLOW%"=="1" (
+                set "continuar=S"
+                echo    Modo automático: seguindo para próxima verificação.
+            ) else (
+                set /p continuar="Continuar? (S/N) [S]: "
+                if "%continuar%"=="" set "continuar=S"
+                if /i not "%continuar%"=="S" goto :start_full_end
+            )
         ) else (
             echo ✅ PostgreSQL iniciado: %PG_SERVICE%
         )
@@ -234,7 +308,7 @@ echo.
 echo ═══════════════════════════════════════════════════════════
 echo    Backend:  http://localhost:3001
 echo    Frontend: http://localhost:3000
-echo    Login:    admin@chamados-ti.com / admin
+echo    Admin:    configure DEFAULT_ADMIN_EMAIL e DEFAULT_ADMIN_PASSWORD em backend\.env
 echo ═══════════════════════════════════════════════════════════
 echo.
 
@@ -249,14 +323,26 @@ if "%BACKEND_READY%"=="1" (
 
 call :free_port 3000 Frontend
 start "Frontend DEV" cmd /k "cd /d %~dp0frontend && npm start"
+call :wait_frontend_healthy
 
-echo ✅ Sistema iniciado com diagnóstico completo!
+if "%BACKEND_READY%"=="1" if "%FRONTEND_READY%"=="1" set "START_SUCCESS=1"
+
+if "%START_SUCCESS%"=="1" (
+    echo ✅ Sistema iniciado com diagnóstico completo!
+) else (
+    echo ⚠️  O modo completo terminou sem confirmar backend/frontend no tempo esperado.
+)
 echo.
-set /p abrir="Abrir navegador? (S/N): "
-if /i "%abrir%"=="S" start http://localhost:3000
+if "%AUTO_FLOW%"=="1" (
+    if "%START_SUCCESS%"=="1" start http://localhost:3000
+) else (
+    set /p abrir="Abrir navegador? (S/N): "
+    if /i "%abrir%"=="S" start http://localhost:3000
+)
 
+:start_full_end
 timeout /t 3 > nul
-exit
+exit /b 0
 
 REM ═══════════════════════════════════════════════════════════
 REM  OPÇÃO 3: PARAR SERVIDORES
@@ -321,15 +407,50 @@ if "%BACKEND_READY%"=="1" (
 exit /b 0
 
 REM ═══════════════════════════════════════════════════════════
+REM  AUXILIAR: VERIFICAR SAÚDE FRONTEND
+REM ═══════════════════════════════════════════════════════════
+:is_frontend_healthy
+set "FRONTEND_READY=0"
+powershell -NoProfile -Command "try { $r = Invoke-WebRequest -Uri 'http://localhost:3000' -UseBasicParsing -TimeoutSec 2; if ($r.StatusCode -ge 200 -and $r.StatusCode -lt 500) { exit 0 } else { exit 1 } } catch { exit 1 }" >nul 2>&1
+if not errorlevel 1 set "FRONTEND_READY=1"
+exit /b 0
+
+REM ═══════════════════════════════════════════════════════════
+REM  AUXILIAR: AGUARDAR FRONTEND SUBIR
+REM ═══════════════════════════════════════════════════════════
+:wait_frontend_healthy
+set "FRONTEND_READY=0"
+echo ⏳ Aguardando frontend ficar disponível...
+
+for /l %%I in (1,1,40) do (
+    call :is_frontend_healthy
+    if "!FRONTEND_READY!"=="1" (
+        goto :frontend_ready
+    )
+    timeout /t 1 /nobreak >nul
+)
+
+:frontend_ready
+if "%FRONTEND_READY%"=="1" (
+    echo ✅ Frontend pronto.
+) else (
+    echo ⚠️  Frontend não respondeu no tempo esperado.
+)
+
+exit /b 0
+
+REM ═══════════════════════════════════════════════════════════
 REM  AUXILIAR: CHECAR VERSÃO DO NODE
 REM ═══════════════════════════════════════════════════════════
 :check_node_version
+set "START_BLOCKED=0"
 set "NODE_MAJOR="
 for /f %%V in ('node -p "process.versions.node.split(\".\")[0]" 2^>nul') do set "NODE_MAJOR=%%V"
 
 if not defined NODE_MAJOR (
     echo ⚠️  Node.js não encontrado no PATH.
     echo    Instale o Node.js LTS para executar o sistema.
+    set "START_BLOCKED=1"
     exit /b 0
 )
 
@@ -747,6 +868,10 @@ set "PGPASSWORD="
 
 echo.
 echo ═══════════════════════════════════════════════════════════
-pause
-cls
-goto :menu
+if "%AUTO_FLOW%"=="1" (
+    exit /b 0
+) else (
+    pause
+    cls
+    goto :menu
+)

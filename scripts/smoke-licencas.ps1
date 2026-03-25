@@ -1,6 +1,29 @@
 $ErrorActionPreference = 'Stop'
 
-$loginBody = @{ email='admin@chamados-ti.com'; senha='admin' } | ConvertTo-Json
+$backendEnvPath = Join-Path $PSScriptRoot '..\backend\.env'
+$envMap = @{}
+
+if (Test-Path $backendEnvPath) {
+  foreach ($line in Get-Content $backendEnvPath) {
+    if ([string]::IsNullOrWhiteSpace($line) -or $line.TrimStart().StartsWith('#')) {
+      continue
+    }
+
+    $parts = $line -split '=', 2
+    if ($parts.Count -eq 2) {
+      $envMap[$parts[0].Trim()] = $parts[1].Trim()
+    }
+  }
+}
+
+$adminEmail = if ($env:DEFAULT_ADMIN_EMAIL) { $env:DEFAULT_ADMIN_EMAIL } else { $envMap['DEFAULT_ADMIN_EMAIL'] }
+$adminPassword = if ($env:DEFAULT_ADMIN_PASSWORD) { $env:DEFAULT_ADMIN_PASSWORD } else { $envMap['DEFAULT_ADMIN_PASSWORD'] }
+
+if ([string]::IsNullOrWhiteSpace($adminEmail) -or [string]::IsNullOrWhiteSpace($adminPassword)) {
+  throw 'Configure DEFAULT_ADMIN_EMAIL e DEFAULT_ADMIN_PASSWORD no backend/.env antes de rodar o smoke test.'
+}
+
+$loginBody = @{ email=$adminEmail; senha=$adminPassword } | ConvertTo-Json
 $login = Invoke-RestMethod -Uri 'http://localhost:3001/api/auth/login' -Method Post -ContentType 'application/json' -Body $loginBody
 $token = $login.token
 $headers = @{ Authorization = "Bearer $token" }

@@ -43,29 +43,21 @@ const ensureAtivoCatalogSeed = async () => {
 
   const ensureByNome = async (Model, records) => {
     for (const record of records) {
-      const existing = await Model.findOne({
+      const [instance, created] = await Model.findOrCreate({
         where: { nome: record.nome },
+        defaults: { ...record, ativo: true },
         paranoid: false
       });
 
-      if (!existing) {
-        await Model.create({ ...record, ativo: true });
-        continue;
+      if (!created) {
+        const updatePayload = { ativo: true };
+        if (record.descricao !== undefined) updatePayload.descricao = record.descricao;
+        if (record.cor !== undefined) updatePayload.cor = record.cor;
+        if (record.tipo !== undefined) updatePayload.tipo = record.tipo;
+
+        if (instance.deletedAt) await instance.restore();
+        await instance.update(updatePayload);
       }
-
-      const updatePayload = {
-        ativo: true,
-      };
-
-      if (record.descricao !== undefined) updatePayload.descricao = record.descricao;
-      if (record.cor !== undefined) updatePayload.cor = record.cor;
-      if (record.tipo !== undefined) updatePayload.tipo = record.tipo;
-
-      if (existing.deletedAt) {
-        await existing.restore();
-      }
-
-      await existing.update(updatePayload);
     }
   };
 

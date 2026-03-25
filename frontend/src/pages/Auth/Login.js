@@ -24,13 +24,6 @@ function Login() {
   });
 
   const getLoginErrorMessage = (err) => {
-    const normalizedEmail = (formData.email || '').trim().toLowerCase();
-    const normalizedPassword = (formData.senha || '').trim();
-
-    if (normalizedEmail === 'admin' && normalizedPassword === 'admin') {
-      return 'Use e-mail no login. Acesso padrão: admin@chamados-ti.com / admin';
-    }
-
     if (axios.isAxiosError(err)) {
       if (!err.response) {
         if (err.code === 'ECONNABORTED') {
@@ -115,7 +108,7 @@ function Login() {
           onChange={handleChange}
           margin="normal"
           required
-          helperText="Ex.: admin@chamados-ti.com"
+          helperText="Use o e-mail cadastrado para a sua conta"
           autoComplete="username"
           autoFocus
         />

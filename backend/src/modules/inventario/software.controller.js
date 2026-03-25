@@ -32,14 +32,16 @@ const ensureSoftwareCatalogSeed = async () => {
 
   const ensureByNome = async (Model, records) => {
     for (const record of records) {
-      const existing = await Model.findOne({ where: { nome: record.nome }, paranoid: false });
-      if (!existing) {
-        await Model.create({ ...record, ativo: true });
-        continue;
-      }
+      const [instance, created] = await Model.findOrCreate({
+        where: { nome: record.nome },
+        defaults: { ...record, ativo: true },
+        paranoid: false
+      });
 
-      if (existing.deletedAt) await existing.restore();
-      await existing.update({ descricao: record.descricao, ativo: true });
+      if (!created) {
+        if (instance.deletedAt) await instance.restore();
+        await instance.update({ descricao: record.descricao, ativo: true });
+      }
     }
   };
 

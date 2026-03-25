@@ -423,12 +423,11 @@ npm start
 
 Aplicação disponível em: `http://localhost:3000`
 
-### Credenciais Padrão (após seed)
+### Acesso administrativo inicial
 
-- **Usuário**: admin
-- **Senha**: admin
-
-⚠️ **IMPORTANTE**: Altere a senha padrão após primeiro login!
+- Configure `DEFAULT_ADMIN_EMAIL` e `DEFAULT_ADMIN_PASSWORD` no `backend/.env` antes de executar o seed.
+- O sistema não deve usar credenciais padrão previsíveis como `admin/admin`.
+- Use uma senha forte com no mínimo 12 caracteres.
 
 ---
 

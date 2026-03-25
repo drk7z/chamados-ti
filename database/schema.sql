@@ -718,10 +718,18 @@ CREATE TABLE entidades (
 );
 
 -- Relacionar entidades com outras tabelas
-ALTER TABLE users ADD COLUMN entidade_id UUID REFERENCES entidades(id);
-ALTER TABLE clientes ADD COLUMN entidade_id UUID REFERENCES entidades(id);
-ALTER TABLE chamados ADD COLUMN entidade_id UUID REFERENCES entidades(id);
-ALTER TABLE ativos ADD COLUMN entidade_id UUID REFERENCES entidades(id    quantidade_licencas INTEGER DEFAULT 1,
+ALTER TABLE users ADD COLUMN IF NOT EXISTS entidade_id UUID REFERENCES entidades(id);
+ALTER TABLE clientes ADD COLUMN IF NOT EXISTS entidade_id UUID REFERENCES entidades(id);
+ALTER TABLE chamados ADD COLUMN IF NOT EXISTS entidade_id UUID REFERENCES entidades(id);
+ALTER TABLE ativos ADD COLUMN IF NOT EXISTS entidade_id UUID REFERENCES entidades(id);
+
+-- Licenças de Software
+CREATE TABLE IF NOT EXISTS licencas (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    software_id UUID NOT NULL REFERENCES softwares(id),
+    chave_licenca VARCHAR(500),
+    tipo_licenca_id UUID NOT NULL REFERENCES tipo_licencas(id),
+    quantidade_licencas INTEGER DEFAULT 1,
     em_uso INTEGER DEFAULT 0,
     data_aquisicao DATE,
     data_expiracao DATE,
@@ -730,9 +738,51 @@ ALTER TABLE ativos ADD COLUMN entidade_id UUID REFERENCES entidades(id    quanti
     nota_fiscal VARCHAR(100),
     observacoes TEXT,
     ativo BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Atribuições de Licenças
+CREATE TABLE IF NOT EXISTS licencas_atribuicoes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    licenca_id UUID NOT NULL REFERENCES licencas(id),
+    usuario_id UUID REFERENCES users(id),
+    ativo_id UUID REFERENCES ativos(id),
+    data_atribuicao DATE NOT NULL DEFAULT CURRENT_DATE,
+    data_revogacao DATE,
+    ativo BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Instalações de Software em Ativos
+CREATE TABLE IF NOT EXISTS instalacoes_software (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    software_id UUID NOT NULL REFERENCES softwares(id),
+    ativo_id UUID NOT NULL REFERENCES ativos(id),
+    versao_instalada VARCHAR(50),
+    data_instalacao DATE,
+    chave_produto VARCHAR(255),
+    ativo BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Garantias de Ativos
+CREATE TABLE IF NOT EXISTS ativo_garantias (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    ativo_id UUID NOT NULL REFERENCES ativos(id),
+    fornecedor_id UUID REFERENCES fornecedores(id),
+    data_inicio DATE NOT NULL,
+    data_fim DATE NOT NULL,
+    tipo_garantia TEXT,
+    observacoes TEXT,
+    ativo BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE
 );
 
 -- =============================================

@@ -24,6 +24,7 @@ function DetalhesAtivo() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const isNew = id === 'novo';
   const [form, setForm] = React.useState({
     codigo: '',
     nome: '',
@@ -41,7 +42,7 @@ function DetalhesAtivo() {
   const { data: ativo, isLoading, isError } = useQuery(['inventario-ativo', id], async () => {
     const response = await api.get(`/inventario/${id}`);
     return response.data;
-  });
+  }, { enabled: !isNew });
 
   const { data: tipos = [] } = useQuery('inventario-config-tipos', async () => {
     const response = await api.get('/inventario/config/tipos');
@@ -71,7 +72,7 @@ function DetalhesAtivo() {
   const { data: historico = [], isLoading: loadingHistorico } = useQuery(['inventario-historico', id], async () => {
     const response = await api.get(`/inventario/${id}/historico`);
     return response.data || [];
-  });
+  }, { enabled: !isNew });
 
   React.useEffect(() => {
     if (!ativo) return;
@@ -85,6 +86,23 @@ function DetalhesAtivo() {
       observacoes: ativo.observacoes || '',
     });
   }, [ativo]);
+
+  const createMutation = useMutation(
+    async (payload) => {
+      const response = await api.post('/inventario', payload);
+      return response.data;
+    },
+    {
+      onSuccess: (data) => {
+        toast.success('Ativo criado com sucesso');
+        queryClient.invalidateQueries('inventario-list');
+        navigate(`/inventario/${data.id}`);
+      },
+      onError: (error) => {
+        toast.error(error.response?.data?.error || 'Falha ao criar ativo');
+      },
+    }
+  );
 
   const updateMutation = useMutation(
     async (payload) => {
@@ -123,14 +141,19 @@ function DetalhesAtivo() {
 
   const handleSave = (event) => {
     event.preventDefault();
-    updateMutation.mutate({
+    const payload = {
       codigo: form.codigo.trim(),
       nome: form.nome.trim(),
       tipo_id: form.tipo_id,
       status_id: form.status_id,
       categoria_id: form.categoria_id || null,
       observacoes: form.observacoes?.trim() || null,
-    });
+    };
+    if (isNew) {
+      createMutation.mutate(payload);
+    } else {
+      updateMutation.mutate(payload);
+    }
   };
 
   const handleMovimentar = (event) => {
@@ -145,22 +168,22 @@ function DetalhesAtivo() {
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-        <Typography variant="h4">Detalhes do Ativo</Typography>
+        <Typography variant="h4">{isNew ? 'Novo Ativo' : 'Detalhes do Ativo'}</Typography>
         <Button variant="outlined" onClick={() => navigate('/inventario')}>
           Voltar
         </Button>
       </Stack>
 
-      {isLoading ? (
+      {!isNew && isLoading ? (
         <CircularProgress size={24} />
-      ) : isError ? (
+      ) : !isNew && isError ? (
         <Alert severity="error">Não foi possível carregar o ativo.</Alert>
       ) : (
         <Grid container spacing={2}>
           <Grid item xs={12} md={7}>
             <Paper sx={{ p: 2, mb: 2 }}>
               <Typography variant="h6" gutterBottom>
-                Atualização do Ativo
+                {isNew ? 'Dados do Ativo' : 'Atualização do Ativo'}
               </Typography>
 
               <form onSubmit={handleSave}>
@@ -197,73 +220,77 @@ function DetalhesAtivo() {
                     <TextField id="ativo-observacoes" name="observacoes" fullWidth multiline minRows={3} label="Observações" value={form.observacoes} onChange={(event) => setForm((prev) => ({ ...prev, observacoes: event.target.value }))} />
                   </Grid>
                   <Grid item xs={12}>
-                    <Button type="submit" variant="contained" disabled={updateMutation.isLoading}>
-                      {updateMutation.isLoading ? 'Salvando...' : 'Salvar alterações'}
+                    <Button type="submit" variant="contained" disabled={createMutation.isLoading || updateMutation.isLoading}>
+                      {createMutation.isLoading || updateMutation.isLoading ? 'Salvando...' : isNew ? 'Criar Ativo' : 'Salvar alterações'}
                     </Button>
                   </Grid>
                 </Grid>
               </form>
             </Paper>
 
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Movimentação
-              </Typography>
+            {!isNew && (
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                  Movimentação
+                </Typography>
 
-              <form onSubmit={handleMovimentar}>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={6}>
-                    <TextField id="mov-localizacao" name="localizacao_nova_id" fullWidth required select label="Nova localização" value={movimentacao.localizacao_nova_id} onChange={(event) => setMovimentacao((prev) => ({ ...prev, localizacao_nova_id: event.target.value }))} SelectProps={selectA11yProps}>
-                      <MenuItem value="" disabled>Selecione</MenuItem>
-                      {unidades.map((item) => (
-                        <MenuItem key={item.id} value={item.id}>{item.nome}</MenuItem>
-                      ))}
-                    </TextField>
+                <form onSubmit={handleMovimentar}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <TextField id="mov-localizacao" name="localizacao_nova_id" fullWidth required select label="Nova localização" value={movimentacao.localizacao_nova_id} onChange={(event) => setMovimentacao((prev) => ({ ...prev, localizacao_nova_id: event.target.value }))} SelectProps={selectA11yProps}>
+                        <MenuItem value="" disabled>Selecione</MenuItem>
+                        {unidades.map((item) => (
+                          <MenuItem key={item.id} value={item.id}>{item.nome}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField id="mov-responsavel" name="responsavel_novo_id" fullWidth select label="Novo responsável" value={movimentacao.responsavel_novo_id} onChange={(event) => setMovimentacao((prev) => ({ ...prev, responsavel_novo_id: event.target.value }))} SelectProps={selectA11yProps}>
+                        <MenuItem value="">Manter responsável</MenuItem>
+                        {responsaveis.map((item) => (
+                          <MenuItem key={item.id} value={item.id}>{item.nome} ({item.email})</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField id="mov-motivo" name="motivo" fullWidth required label="Motivo" value={movimentacao.motivo} onChange={(event) => setMovimentacao((prev) => ({ ...prev, motivo: event.target.value }))} />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Button type="submit" variant="outlined" disabled={movimentarMutation.isLoading}>
+                        {movimentarMutation.isLoading ? 'Movimentando...' : 'Registrar movimentação'}
+                      </Button>
+                    </Grid>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField id="mov-responsavel" name="responsavel_novo_id" fullWidth select label="Novo responsável" value={movimentacao.responsavel_novo_id} onChange={(event) => setMovimentacao((prev) => ({ ...prev, responsavel_novo_id: event.target.value }))} SelectProps={selectA11yProps}>
-                      <MenuItem value="">Manter responsável</MenuItem>
-                      {responsaveis.map((item) => (
-                        <MenuItem key={item.id} value={item.id}>{item.nome} ({item.email})</MenuItem>
-                      ))}
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField id="mov-motivo" name="motivo" fullWidth required label="Motivo" value={movimentacao.motivo} onChange={(event) => setMovimentacao((prev) => ({ ...prev, motivo: event.target.value }))} />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Button type="submit" variant="outlined" disabled={movimentarMutation.isLoading}>
-                      {movimentarMutation.isLoading ? 'Movimentando...' : 'Registrar movimentação'}
-                    </Button>
-                  </Grid>
-                </Grid>
-              </form>
-            </Paper>
+                </form>
+              </Paper>
+            )}
           </Grid>
 
-          <Grid item xs={12} md={5}>
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Histórico de Movimentação
-              </Typography>
+          {!isNew && (
+            <Grid item xs={12} md={5}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                  Histórico de Movimentação
+                </Typography>
 
-              {loadingHistorico ? (
-                <CircularProgress size={20} />
-              ) : (
-                <List dense>
-                  {historico.map((item) => (
-                    <ListItem key={item.id} divider alignItems="flex-start">
-                      <ListItemText
-                        primary={new Date(item.data_movimentacao).toLocaleString('pt-BR')}
-                        secondary={`De: ${item.localizacao_anterior?.nome || '-'} | Para: ${item.localizacao_nova?.nome || '-'}\nResponsável: ${item.responsavel_novo?.nome || '-'}\nMotivo: ${item.motivo || '-'}\nPor: ${item.realizado_por?.nome || '-'}`}
-                      />
-                    </ListItem>
-                  ))}
-                  {!historico.length && <ListItem><ListItemText primary="Nenhuma movimentação registrada." /></ListItem>}
-                </List>
-              )}
-            </Paper>
-          </Grid>
+                {loadingHistorico ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  <List dense>
+                    {historico.map((item) => (
+                      <ListItem key={item.id} divider alignItems="flex-start">
+                        <ListItemText
+                          primary={new Date(item.data_movimentacao).toLocaleString('pt-BR')}
+                          secondary={`De: ${item.localizacao_anterior?.nome || '-'} | Para: ${item.localizacao_nova?.nome || '-'}\nResponsável: ${item.responsavel_novo?.nome || '-'}\nMotivo: ${item.motivo || '-'}\nPor: ${item.realizado_por?.nome || '-'}`}
+                        />
+                      </ListItem>
+                    ))}
+                    {!historico.length && <ListItem><ListItemText primary="Nenhuma movimentação registrada." /></ListItem>}
+                  </List>
+                )}
+              </Paper>
+            </Grid>
+          )}
         </Grid>
       )}
     </Box>

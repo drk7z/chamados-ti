@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { Op } = require('sequelize');
 const { User, Role, Entidade } = require('../../models');
 const logger = require('../../utils/logger');
 
@@ -13,9 +14,13 @@ class AuthController {
         });
       }
 
-      // Buscar usuário
+      // Buscar usuário — aceita e-mail completo ou somente a parte local (ex: "admin" → finds "admin@*")
+      const emailWhere = email.includes('@')
+        ? { email }
+        : { email: { [Op.iLike]: `${email}@%` } };
+
       const user = await User.findOne({ 
-        where: { email },
+        where: emailWhere,
         include: [{
           model: Role,
           as: 'roles',

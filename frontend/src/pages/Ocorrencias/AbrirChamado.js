@@ -19,7 +19,21 @@ import { selectA11yProps } from '../../utils/selectAccessibility';
 
 function AbrirChamado() {
   const navigate = useNavigate();
+  const CATEGORIAS = [
+    'Redes',
+    'SAP',
+    'Software',
+    'Outlook / E-mail',
+    'Hardware',
+    'Impressora',
+    'Acesso / Permissão',
+    'VPN',
+    'Telefonia',
+    'Outro',
+  ];
+
   const [form, setForm] = React.useState({
+    categoria: '',
     titulo: '',
     descricao: '',
     tipo_id: '',
@@ -85,12 +99,13 @@ function AbrirChamado() {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!form.titulo.trim() || !form.descricao.trim() || !form.tipo_id || !form.prioridade_id || !form.status_id) {
+    if (!form.categoria || !form.titulo.trim() || !form.descricao.trim() || !form.tipo_id || !form.prioridade_id || !form.status_id) {
       setFormError('Preencha todos os campos obrigatórios.');
       return;
     }
 
     createMutation.mutate({
+      categoria: form.categoria,
       titulo: form.titulo.trim(),
       descricao: form.descricao.trim(),
       tipo_id: form.tipo_id,
@@ -125,6 +140,26 @@ function AbrirChamado() {
         ) : (
           <form onSubmit={handleSubmit}>
             <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  id="abrir-categoria"
+                  fullWidth
+                  required
+                  select
+                  label="Categoria"
+                  name="categoria"
+                  value={form.categoria}
+                  onChange={handleChange}
+                  SelectProps={selectA11yProps}
+                >
+                  {CATEGORIAS.map((cat) => (
+                    <MenuItem key={cat} value={cat}>
+                      {cat}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
               <Grid item xs={12}>
                 <TextField
                   id="abrir-titulo"
