@@ -503,18 +503,6 @@ Veja o [CHANGELOG.md](CHANGELOG.md) para histórico completo de versões e mudan
 
 ---
 
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Por favor:
-
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
-3. Commit suas mudanças (`git commit -m 'Adiciona MinhaFeature'`)
-4. Push para a branch (`git push origin feature/MinhaFeature`)
-5. Abra um Pull Request
-
----
-
 ## 📝 Licença
 
 Este projeto está sob a licença ISC. Veja o arquivo LICENSE para mais detalhes.
@@ -523,23 +511,14 @@ Este projeto está sob a licença ISC. Veja o arquivo LICENSE para mais detalhes
 
 ## 👥 Autores
 
-- **Equipe de Desenvolvimento** - Versão inicial e expansão
+- **Leandro Andrade** - Versão inicial e expansão
 
 ---
 
 ## 🙏 Agradecimentos
 
-- Inspirado no [GLPI](https://glpi-project.org/)
 - Comunidade Node.js e React
 - Contribuidores open-source
-
----
-
-## 📞 Suporte
-
-Para reportar bugs ou solicitar features:
-- Abra uma [Issue](https://github.com/seu-usuario/chamados-ti/issues)
-- Entre em contato: suporte@seudominio.com
 
 ---
 
