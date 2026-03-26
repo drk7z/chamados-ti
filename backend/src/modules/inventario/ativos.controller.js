@@ -27,7 +27,9 @@ const parseBooleanFilter = (value) => {
 const ensureAtivoCatalogSeed = async () => {
   const defaultTipos = [
     { nome: 'Notebook', descricao: 'Computadores portáteis corporativos' },
-    { nome: 'Desktop', descricao: 'Estações de trabalho fixas' }
+    { nome: 'Desktop', descricao: 'Estações de trabalho fixas' },
+    { nome: 'Celular', descricao: 'Smartphones e dispositivos móveis corporativos' },
+    { nome: 'Coletor', descricao: 'Coletores de dados e leitores de código de barras' },
   ];
 
   const defaultStatus = [
